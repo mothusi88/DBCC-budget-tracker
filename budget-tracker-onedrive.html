@@ -714,7 +714,7 @@
         // IMPORTANT: Replace this with your Azure App Registration Client ID
         const MSAL_CONFIG = {
             auth: {
-                clientId: '642e1f35-d45f-47d7-97fd-bb6bf64ff6e5', // Replace this!
+                clientId: 'YOUR_CLIENT_ID_HERE', // Replace this!
                 authority: 'https://login.microsoftonline.com/common',
                 redirectUri: window.location.origin + window.location.pathname
             },
@@ -1060,10 +1060,10 @@
                 let reportContent = `EXPENSE REPORT - ${quarter} ${currentYear}\n`;
                 reportContent += `Generated: ${new Date().toLocaleString()}\n`;
                 reportContent += `Total Expenses: ${formatCurrency(quarterExpenses.reduce((sum, e) => sum + e.amount, 0))}\n\n`;
-                reportContent += `=`.repeat(80) + '\n\n';
+                reportContent += `=`.repeat(80) + `\n\n`;
                 
                 reportContent += `SUMMARY BY CATEGORY\n`;
-                reportContent += `-`.repeat(80) + '\n';
+                reportContent += `-`.repeat(80) + `\n`;
                 Object.entries(categoryTotals).forEach(([category, total]) => {
                     const budget = budgets.find(b => b.category === category);
                     const budgetAmount = budget ? budget.totalAmount : 0;
@@ -1075,7 +1075,7 @@
 
                 reportContent += `\n\n`;
                 reportContent += `DETAILED TRANSACTIONS\n`;
-                reportContent += `-`.repeat(80) + '\n`;
+                reportContent += `-`.repeat(80) + `\n`;
                 quarterExpenses.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                 quarterExpenses.forEach(expense => {
                     const date = new Date(expense.timestamp).toLocaleDateString();
