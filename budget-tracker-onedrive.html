@@ -71,12 +71,17 @@
             gap: 0.5rem;
         }
 
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .btn-primary {
             background: #1e40af;
             color: white;
         }
 
-        .btn-primary:hover {
+        .btn-primary:hover:not(:disabled) {
             background: #1e3a8a;
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
@@ -96,19 +101,14 @@
         .btn-success {
             background: #10b981;
             color: white;
-            font-size: 1.1rem;
-            padding: 1rem 2rem;
+            font-size: 1rem;
+            padding: 0.875rem 1.75rem;
         }
 
         .btn-success:hover {
             background: #059669;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
-        }
-
-        .btn-large {
-            font-size: 1.1rem;
-            padding: 1.25rem 2.5rem;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
         }
 
         /* Stats Cards */
@@ -141,6 +141,33 @@
             color: #1e40af;
         }
 
+        /* Add Expense Section */
+        .add-expense-section {
+            background: white;
+            padding: 1.25rem 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            border: 2px solid #1e40af;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .add-expense-section-left h2 {
+            color: #1e40af;
+            font-size: 1.15rem;
+            margin-bottom: 0.25rem;
+            text-align: left;
+        }
+
+        .add-expense-section-left p {
+            color: #6c757d;
+            margin-bottom: 0;
+            font-size: 0.9rem;
+            text-align: left;
+        }
+
         /* Main Content Grid */
         .main-grid {
             display: grid;
@@ -149,7 +176,7 @@
             margin-bottom: 2rem;
         }
 
-        /* Categories Card */
+        /* Card */
         .card {
             background: white;
             border-radius: 12px;
@@ -173,7 +200,7 @@
             color: #212529;
         }
 
-        /* Budget Categories */
+        /* Level 1 - Main Categories */
         .category-list {
             display: flex;
             flex-direction: column;
@@ -246,14 +273,83 @@
         .variance-positive { color: #10b981; font-weight: 600; }
         .variance-negative { color: #ef4444; font-weight: 600; }
 
-        /* Sub-items */
-        .sub-items {
+        /* Level 2 - Sub Categories */
+        .sub-categories {
             margin-top: 1rem;
             padding-top: 1rem;
             border-top: 1px solid #e9ecef;
         }
 
-        .sub-item {
+        .sub-category-item {
+            padding: 1rem;
+            background: #f8f9ff;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sub-category-item:hover {
+            border-color: #1e40af;
+            background: #eff6ff;
+        }
+
+        .sub-category-item.expanded {
+            border-color: #1e40af;
+            background: #eff6ff;
+        }
+
+        .sub-category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .sub-category-name {
+            font-weight: 600;
+            color: #1e40af;
+            font-size: 0.95rem;
+        }
+
+        .sub-category-amount {
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .sub-category-progress {
+            width: 100%;
+            height: 4px;
+            background: #e9ecef;
+            border-radius: 2px;
+            margin: 0.5rem 0;
+            overflow: hidden;
+        }
+
+        .sub-category-progress-bar {
+            height: 100%;
+            background: #1e40af;
+            border-radius: 2px;
+            transition: width 0.3s;
+        }
+
+        .sub-category-progress-bar.warning { background: #f59e0b; }
+        .sub-category-progress-bar.danger { background: #ef4444; }
+
+        .sub-category-stats {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        /* Level 3 - Individual Items */
+        .level3-items {
+            margin-top: 0.75rem;
+            padding-left: 1rem;
+            border-left: 3px solid #cbd5e1;
+        }
+
+        .item {
             padding: 0.75rem;
             background: white;
             border: 1px solid #e9ecef;
@@ -261,16 +357,39 @@
             margin-bottom: 0.5rem;
         }
 
-        .sub-item-name {
-            font-size: 0.95rem;
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .item-name {
+            font-size: 0.9rem;
             color: #495057;
+            font-weight: 500;
+        }
+
+        .item-amount {
+            font-weight: 600;
+            color: #212529;
+            font-size: 0.9rem;
+        }
+
+        .item-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: #6c757d;
             margin-bottom: 0.25rem;
         }
 
-        .sub-item-stats {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.85rem;
+        .item-notes {
+            font-size: 0.8rem;
+            color: #6c757d;
+            font-style: italic;
+            margin-top: 0.25rem;
+            padding-top: 0.25rem;
+            border-top: 1px dashed #e9ecef;
         }
 
         /* Activity Log */
@@ -301,6 +420,12 @@
         .activity-time {
             font-size: 0.85rem;
             color: #6c757d;
+        }
+
+        .activity-category {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-bottom: 0.25rem;
         }
 
         .activity-description {
@@ -385,27 +510,6 @@
             flex: 1;
         }
 
-        /* Add Expense Section - PROMINENT */
-        .add-expense-section {
-            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
-            padding: 2rem;
-            border-radius: 12px;
-            text-align: center;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 20px rgba(30, 64, 175, 0.3);
-        }
-
-        .add-expense-section h2 {
-            color: white;
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .add-expense-section p {
-            color: rgba(255,255,255,0.9);
-            margin-bottom: 1.5rem;
-        }
-
         .empty-state {
             text-align: center;
             padding: 3rem 2rem;
@@ -416,6 +520,30 @@
             font-size: 3rem;
             margin-bottom: 1rem;
             opacity: 0.5;
+        }
+
+        .notification {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: #10b981;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
 
         @media (max-width: 1024px) {
@@ -440,27 +568,26 @@
             cache: { cacheLocation: 'localStorage' }
         };
 
-        const EXCEL_FILE_PATH = '/Budget-Tracker-Template.xlsx';
-
         function BudgetTrackerApp() {
             const [isSignedIn, setIsSignedIn] = useState(false);
             const [msalInstance, setMsalInstance] = useState(null);
-            const [accessToken, setAccessToken] = useState(null);
             const [budgets, setBudgets] = useState([]);
             const [activities, setActivities] = useState([]);
             const [expandedCategory, setExpandedCategory] = useState(null);
+            const [expandedSubCategory, setExpandedSubCategory] = useState(null);
             const [showExpenseModal, setShowExpenseModal] = useState(false);
             const [showSetupModal, setShowSetupModal] = useState(false);
             const [notification, setNotification] = useState(null);
-            const [loading, setLoading] = useState(false);
-            const [fileId, setFileId] = useState(null);
 
             const [expenseForm, setExpenseForm] = useState({
-                category: '',
+                userName: '',
+                mainCategory: '',
+                mainCategoryId: null,
                 subCategory: '',
+                subCategoryId: null,
+                item: '',
                 description: '',
-                amount: '',
-                userName: ''
+                amount: ''
             });
 
             useEffect(() => {
@@ -475,7 +602,7 @@
                 const accounts = msalInstance.getAllAccounts();
                 if (accounts.length > 0) {
                     setIsSignedIn(true);
-                    await getAccessToken(msalInstance, accounts[0]);
+                    loadSampleData();
                 }
             };
 
@@ -485,43 +612,50 @@
                         scopes: ['Files.ReadWrite', 'User.Read']
                     });
                     setIsSignedIn(true);
-                    await getAccessToken(msalInstance, response.account);
+                    loadSampleData();
                 } catch (error) {
                     alert('Sign-in failed: ' + error.message);
                 }
             };
 
-            const getAccessToken = async (msal, account) => {
-                try {
-                    const response = await msal.acquireTokenSilent({
-                        scopes: ['Files.ReadWrite'],
-                        account: account
-                    });
-                    setAccessToken(response.accessToken);
-                    await findExcelFile(response.accessToken);
-                } catch (error) {
-                    alert('Failed to get access token');
-                }
-            };
-
-            const findExcelFile = async (token) => {
-                // Simplified - in real implementation would find and load Excel file
-                // For now, load sample data
-                loadSampleData();
+            const signOut = () => {
+                msalInstance.logout();
             };
 
             const loadSampleData = () => {
+                // Load budget data with 3-level hierarchy
                 setBudgets([
                     {
                         id: 1,
                         code: 'A14',
                         name: 'Staff Costs - Indirect',
                         totalAmount: 3297995,
-                        spentAmount: 80785,
-                        subItems: [
-                            { id: 1, code: '2127', name: 'BOCRA Social Activities', budget: 150000, spent: 80785 },
-                            { id: 2, code: '2128', name: 'Staff uniform', budget: 1684537, spent: 0 },
-                            { id: 3, code: '2132', name: 'Subscriptions to professional memberships', budget: 13308, spent: 3200 }
+                        spentAmount: 84785,
+                        subCategories: [
+                            {
+                                id: 1,
+                                code: '2127',
+                                name: 'BOCRA Social Activities',
+                                totalAmount: 150000,
+                                spentAmount: 80785,
+                                items: []
+                            },
+                            {
+                                id: 2,
+                                code: '2128',
+                                name: 'Staff uniform',
+                                totalAmount: 1684537,
+                                spentAmount: 0,
+                                items: []
+                            },
+                            {
+                                id: 3,
+                                code: '2132',
+                                name: 'Subscriptions to professional memberships',
+                                totalAmount: 13308,
+                                spentAmount: 3200,
+                                items: []
+                            }
                         ]
                     },
                     {
@@ -530,12 +664,7 @@
                         name: 'Training',
                         totalAmount: 469189,
                         spentAmount: 124318.59,
-                        subItems: [
-                            { id: 1, name: 'Planning & Managing PR Campaigns', budget: 102478.71, spent: 0 },
-                            { id: 2, name: 'Certificate in Corporate Communication', budget: 32232.51, spent: 51696.23 },
-                            { id: 3, name: 'Public Relations and Media Skills Course', budget: 20710.01, spent: 0 },
-                            { id: 4, name: 'Content regulation Broadcasting', budget: 98103.71, spent: 72622.36 }
-                        ]
+                        subCategories: []
                     },
                     {
                         id: 3,
@@ -543,9 +672,137 @@
                         name: 'Operating costs',
                         totalAmount: 16160398,
                         spentAmount: 1185701.66,
-                        subItems: [
-                            { id: 1, code: '2134', name: 'Entertainment', budget: 20000, spent: 0 },
-                            { id: 2, code: '3150', name: 'Consultancies', budget: 4604133, spent: 689527.94 }
+                        subCategories: [
+                            {
+                                id: 1,
+                                code: '2134',
+                                name: 'Entertainment',
+                                totalAmount: 20000,
+                                spentAmount: 0,
+                                items: []
+                            },
+                            {
+                                id: 2,
+                                code: '3150',
+                                name: 'Consultancies',
+                                totalAmount: 4604133,
+                                spentAmount: 689527.94,
+                                items: [
+                                    { 
+                                        id: 1,
+                                        name: 'Consumer/operator Perception Survey', 
+                                        budget: 380133, 
+                                        spent: 444708.3,
+                                        notes: '64,575 to be sourced from the BOCRA Contingency'
+                                    },
+                                    { 
+                                        id: 2,
+                                        name: 'Outsourcing PR Events', 
+                                        budget: 2000000, 
+                                        spent: 0,
+                                        notes: ''
+                                    },
+                                    { 
+                                        id: 3,
+                                        name: 'Elections Monitoring and Training of Broadcasters', 
+                                        budget: 500000, 
+                                        spent: 15250,
+                                        notes: 'costs for Elections code of conduct training for Politicians'
+                                    },
+                                    { 
+                                        id: 4,
+                                        name: 'Consumer Coverage FM Monitoring', 
+                                        budget: 224000, 
+                                        spent: 28140,
+                                        notes: ''
+                                    },
+                                    { 
+                                        id: 5,
+                                        name: 'Maintenance of the Broadcast Monitoring System', 
+                                        budget: 1500000, 
+                                        spent: 201419.64,
+                                        notes: ''
+                                    }
+                                ]
+                            },
+                            {
+                                id: 3,
+                                code: '3160',
+                                name: 'Conferences hosted by BOCRA',
+                                totalAmount: 2124172,
+                                spentAmount: 424123.36,
+                                items: [
+                                    { 
+                                        id: 1,
+                                        name: 'IIC', 
+                                        budget: 250000, 
+                                        spent: 118620,
+                                        notes: 'Dato Seiko, Mmokolodi and Interpretation'
+                                    },
+                                    { 
+                                        id: 2,
+                                        name: 'National Broadcasting Conference', 
+                                        budget: 340000, 
+                                        spent: 305503.36,
+                                        notes: 'registration booth, videography, evaluation meeting lunch'
+                                    },
+                                    { 
+                                        id: 3,
+                                        name: 'Benchmarking Exercises', 
+                                        budget: 66000, 
+                                        spent: 0,
+                                        notes: 'NAM, MOM, LCA'
+                                    },
+                                    { 
+                                        id: 4,
+                                        name: 'Cyber Security Workshops', 
+                                        budget: 176000, 
+                                        spent: 0,
+                                        notes: 'We can move the media training to here'
+                                    },
+                                    { 
+                                        id: 5,
+                                        name: 'Annual Cyber Drill', 
+                                        budget: 176000, 
+                                        spent: 0,
+                                        notes: ''
+                                    },
+                                    { 
+                                        id: 6,
+                                        name: 'IPv6 Workshops', 
+                                        budget: 176000, 
+                                        spent: 0,
+                                        notes: ''
+                                    },
+                                    { 
+                                        id: 7,
+                                        name: 'WTSA Workshops', 
+                                        budget: 100000, 
+                                        spent: 0,
+                                        notes: 'Held 7 May'
+                                    },
+                                    { 
+                                        id: 8,
+                                        name: 'CRASA, EXCO and Committees', 
+                                        budget: 550000, 
+                                        spent: 0,
+                                        notes: ''
+                                    }
+                                ]
+                            },
+                            {
+                                id: 4,
+                                code: '3170',
+                                name: 'Conferences',
+                                totalAmount: 525673.55,
+                                spentAmount: 0,
+                                items: [
+                                    { id: 1, name: 'IIC', budget: 126052.66, spent: 0, notes: '' },
+                                    { id: 2, name: 'Next TV Series', budget: 99142.86, spent: 0, notes: 'Used by the Certificate in Corporate Communication' },
+                                    { id: 3, name: 'Africast', budget: 61761.54, spent: 0, notes: '' },
+                                    { id: 4, name: 'International Association of Media & Comms Research', budget: 25000, spent: 0, notes: '' }
+                                ]
+                            }
                         ]
                     }
                 ]);
@@ -555,17 +812,19 @@
                         id: 1,
                         timestamp: new Date().toISOString(),
                         userName: 'Keotshepile M.',
-                        category: 'Training',
-                        description: 'Certificate in Corporate Communication',
-                        amount: 51696.23
+                        mainCategory: 'A16 - Operating costs',
+                        subCategory: '3150 - Consultancies',
+                        item: 'Consumer/operator Perception Survey',
+                        amount: 444708.30
                     },
                     {
                         id: 2,
                         timestamp: new Date(Date.now() - 86400000).toISOString(),
                         userName: 'Mothusi M.',
-                        category: 'Operating costs',
-                        description: 'Consumer/operator Perception Survey',
-                        amount: 444708.30
+                        mainCategory: 'A16 - Operating costs',
+                        subCategory: '3160 - Conferences hosted by BOCRA',
+                        item: 'IIC',
+                        amount: 118620
                     }
                 ]);
             };
@@ -600,10 +859,52 @@
                 return '';
             };
 
+            const showNotification = (message) => {
+                setNotification(message);
+                setTimeout(() => setNotification(null), 3000);
+            };
+
             const handleAddExpense = (e) => {
                 e.preventDefault();
-                alert('Expense would be recorded to OneDrive Excel here');
+                
+                // In real implementation, this would write to OneDrive Excel
+                const newActivity = {
+                    id: activities.length + 1,
+                    timestamp: new Date().toISOString(),
+                    userName: expenseForm.userName,
+                    mainCategory: expenseForm.mainCategory,
+                    subCategory: expenseForm.subCategory,
+                    item: expenseForm.item,
+                    amount: parseFloat(expenseForm.amount)
+                };
+
+                setActivities([newActivity, ...activities]);
+                showNotification('Expense recorded successfully!');
                 setShowExpenseModal(false);
+                setExpenseForm({
+                    userName: '',
+                    mainCategory: '',
+                    mainCategoryId: null,
+                    subCategory: '',
+                    subCategoryId: null,
+                    item: '',
+                    description: '',
+                    amount: ''
+                });
+            };
+
+            const getSubCategoriesForMain = () => {
+                if (!expenseForm.mainCategoryId) return [];
+                const mainCat = budgets.find(b => b.id === expenseForm.mainCategoryId);
+                return mainCat ? mainCat.subCategories : [];
+            };
+
+            const getItemsForSubCategory = () => {
+                if (!expenseForm.mainCategoryId || !expenseForm.subCategoryId) return [];
+                const mainCat = budgets.find(b => b.id === expenseForm.mainCategoryId);
+                if (!mainCat) return [];
+                const subCat = mainCat.subCategories.find(s => s.id === expenseForm.subCategoryId);
+                return subCat ? subCat.items : [];
             };
 
             if (!isSignedIn) {
@@ -621,7 +922,7 @@
                             <p style={{ color: '#6c757d', marginBottom: '2rem' }}>
                                 Sign in with your Microsoft account to access the budget tracker
                             </p>
-                            <button className="btn btn-primary btn-large" onClick={signIn}>
+                            <button className="btn btn-primary" style={{ fontSize: '1.1rem', padding: '1rem 2rem' }} onClick={signIn}>
                                 Sign in with Microsoft
                             </button>
                         </div>
@@ -645,6 +946,9 @@
                             <button className="btn btn-secondary">
                                 📊 Reports
                             </button>
+                            <button className="btn btn-secondary" onClick={signOut}>
+                                Sign Out
+                            </button>
                         </div>
                     </div>
 
@@ -664,9 +968,11 @@
                     </div>
 
                     <div className="add-expense-section">
-                        <h2>💰 Record an Expense</h2>
-                        <p>Click below to log a new expense against your budget</p>
-                        <button className="btn btn-success btn-large" onClick={() => setShowExpenseModal(true)}>
+                        <div className="add-expense-section-left">
+                            <h2>💰 Record an Expense</h2>
+                            <p>Click to log a new expense against your budget</p>
+                        </div>
+                        <button className="btn btn-success" onClick={() => setShowExpenseModal(true)}>
                             + Add Expense
                         </button>
                     </div>
@@ -712,20 +1018,72 @@
                                                 </span>
                                             </div>
 
-                                            {isExpanded && budget.subItems && (
-                                                <div className="sub-items" onClick={(e) => e.stopPropagation()}>
-                                                    {budget.subItems.map(sub => (
-                                                        <div key={sub.id} className="sub-item">
-                                                            <div className="sub-item-name">
-                                                                {sub.code && `${sub.code} - `}{sub.name}
+                                            {isExpanded && budget.subCategories && budget.subCategories.length > 0 && (
+                                                <div className="sub-categories" onClick={(e) => e.stopPropagation()}>
+                                                    {budget.subCategories.map(subCat => {
+                                                        const subPercentage = (subCat.spentAmount / subCat.totalAmount) * 100;
+                                                        const subRemaining = subCat.totalAmount - subCat.spentAmount;
+                                                        const isSubExpanded = expandedSubCategory === `${budget.id}-${subCat.id}`;
+
+                                                        return (
+                                                            <div 
+                                                                key={subCat.id}
+                                                                className={`sub-category-item ${isSubExpanded ? 'expanded' : ''}`}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setExpandedSubCategory(isSubExpanded ? null : `${budget.id}-${subCat.id}`);
+                                                                }}
+                                                            >
+                                                                <div className="sub-category-header">
+                                                                    <div className="sub-category-name">
+                                                                        {subCat.code} - {subCat.name}
+                                                                    </div>
+                                                                    <div className="sub-category-amount">
+                                                                        {formatCurrency(subRemaining)}
+                                                                    </div>
+                                                                </div>
+                                                                <div className="sub-category-progress">
+                                                                    <div 
+                                                                        className={`sub-category-progress-bar ${getProgressColor(subPercentage)}`}
+                                                                        style={{ width: `${Math.min(subPercentage, 100)}%` }}
+                                                                    ></div>
+                                                                </div>
+                                                                <div className="sub-category-stats">
+                                                                    Budget: {formatCurrency(subCat.totalAmount)} • 
+                                                                    Spent: {formatCurrency(subCat.spentAmount)} • 
+                                                                    {subPercentage.toFixed(1)}% used
+                                                                </div>
+
+                                                                {isSubExpanded && subCat.items && subCat.items.length > 0 && (
+                                                                    <div className="level3-items" onClick={(e) => e.stopPropagation()}>
+                                                                        {subCat.items.map((item) => {
+                                                                            const itemRemaining = item.budget - item.spent;
+                                                                            const itemPercentage = (item.spent / item.budget) * 100;
+                                                                            
+                                                                            return (
+                                                                                <div key={item.id} className="item">
+                                                                                    <div className="item-header">
+                                                                                        <div className="item-name">{item.name}</div>
+                                                                                        <div className="item-amount">{formatCurrency(itemRemaining)}</div>
+                                                                                    </div>
+                                                                                    <div className="item-stats">
+                                                                                        <span>Budget: {formatCurrency(item.budget)}</span>
+                                                                                        <span>Spent: {formatCurrency(item.spent)}</span>
+                                                                                        <span>{itemPercentage.toFixed(1)}% used</span>
+                                                                                    </div>
+                                                                                    {item.notes && (
+                                                                                        <div className="item-notes">
+                                                                                            Note: {item.notes}
+                                                                                        </div>
+                                                                                    )}
+                                                                                </div>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                )}
                                                             </div>
-                                                            <div className="sub-item-stats">
-                                                                <span>Budget: {formatCurrency(sub.budget)}</span>
-                                                                <span>Spent: {formatCurrency(sub.spent)}</span>
-                                                                <span>Remaining: {formatCurrency(sub.budget - sub.spent)}</span>
-                                                            </div>
-                                                        </div>
-                                                    ))}
+                                                        );
+                                                    })}
                                                 </div>
                                             )}
                                         </div>
@@ -752,8 +1110,11 @@
                                                 <span className="activity-user">{activity.userName}</span>
                                                 <span className="activity-time">{formatTime(activity.timestamp)}</span>
                                             </div>
+                                            <div className="activity-category">
+                                                {activity.mainCategory} → {activity.subCategory}
+                                            </div>
                                             <div className="activity-description">
-                                                {activity.description} • {activity.category}
+                                                {activity.item}
                                             </div>
                                             <div className="activity-amount">
                                                 -{formatCurrency(activity.amount)}
@@ -783,32 +1144,82 @@
                                             required
                                         />
                                     </div>
+
                                     <div className="form-group">
-                                        <label className="form-label">Main Category</label>
+                                        <label className="form-label">Main Category (Level 1)</label>
                                         <select
                                             className="form-select"
-                                            value={expenseForm.category}
-                                            onChange={(e) => setExpenseForm({...expenseForm, category: e.target.value})}
+                                            value={expenseForm.mainCategoryId || ''}
+                                            onChange={(e) => {
+                                                const catId = parseInt(e.target.value);
+                                                const cat = budgets.find(b => b.id === catId);
+                                                setExpenseForm({
+                                                    ...expenseForm, 
+                                                    mainCategoryId: catId,
+                                                    mainCategory: cat ? `${cat.code} - ${cat.name}` : '',
+                                                    subCategoryId: null,
+                                                    subCategory: '',
+                                                    item: ''
+                                                });
+                                            }}
                                             required
                                         >
-                                            <option value="">Select category</option>
+                                            <option value="">Select main category</option>
                                             {budgets.map(budget => (
-                                                <option key={budget.id} value={budget.name}>
+                                                <option key={budget.id} value={budget.id}>
                                                     {budget.code} - {budget.name}
                                                 </option>
                                             ))}
                                         </select>
                                     </div>
-                                    <div className="form-group">
-                                        <label className="form-label">Sub-Category (Optional)</label>
-                                        <input
-                                            type="text"
-                                            className="form-input"
-                                            placeholder="Enter sub-category if applicable"
-                                            value={expenseForm.subCategory}
-                                            onChange={(e) => setExpenseForm({...expenseForm, subCategory: e.target.value})}
-                                        />
-                                    </div>
+
+                                    {getSubCategoriesForMain().length > 0 && (
+                                        <div className="form-group">
+                                            <label className="form-label">Sub-Category (Level 2)</label>
+                                            <select
+                                                className="form-select"
+                                                value={expenseForm.subCategoryId || ''}
+                                                onChange={(e) => {
+                                                    const subCatId = parseInt(e.target.value);
+                                                    const subCat = getSubCategoriesForMain().find(s => s.id === subCatId);
+                                                    setExpenseForm({
+                                                        ...expenseForm, 
+                                                        subCategoryId: subCatId,
+                                                        subCategory: subCat ? `${subCat.code} - ${subCat.name}` : '',
+                                                        item: ''
+                                                    });
+                                                }}
+                                                required
+                                            >
+                                                <option value="">Select sub-category</option>
+                                                {getSubCategoriesForMain().map(subCat => (
+                                                    <option key={subCat.id} value={subCat.id}>
+                                                        {subCat.code} - {subCat.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
+
+                                    {getItemsForSubCategory().length > 0 && (
+                                        <div className="form-group">
+                                            <label className="form-label">Specific Item (Level 3)</label>
+                                            <select
+                                                className="form-select"
+                                                value={expenseForm.item}
+                                                onChange={(e) => setExpenseForm({...expenseForm, item: e.target.value})}
+                                                required
+                                            >
+                                                <option value="">Select specific item</option>
+                                                {getItemsForSubCategory().map((item) => (
+                                                    <option key={item.id} value={item.name}>
+                                                        {item.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
+
                                     <div className="form-group">
                                         <label className="form-label">Description</label>
                                         <input
@@ -820,6 +1231,7 @@
                                             required
                                         />
                                     </div>
+
                                     <div className="form-group">
                                         <label className="form-label">Amount (Pula)</label>
                                         <input
@@ -832,16 +1244,31 @@
                                             required
                                         />
                                     </div>
+
                                     <div className="modal-actions">
-                                        <button type="button" className="btn btn-secondary" onClick={() => setShowExpenseModal(false)}>
+                                        <button 
+                                            type="button" 
+                                            className="btn btn-secondary" 
+                                            onClick={() => setShowExpenseModal(false)}
+                                        >
                                             Cancel
                                         </button>
-                                        <button type="submit" className="btn btn-primary">
+                                        <button 
+                                            type="submit" 
+                                            className="btn btn-primary"
+                                            disabled={!expenseForm.mainCategoryId || !expenseForm.subCategoryId || (getItemsForSubCategory().length > 0 && !expenseForm.item)}
+                                        >
                                             Record Expense
                                         </button>
                                     </div>
                                 </form>
                             </div>
+                        </div>
+                    )}
+
+                    {notification && (
+                        <div className="notification">
+                            {notification}
                         </div>
                     )}
                 </div>
