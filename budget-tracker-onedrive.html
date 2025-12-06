@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Budget Tracker Pro - OneDrive Edition</title>
+    <title>DBCC Budget Tracker - OneDrive Edition</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -758,14 +758,14 @@
             }, []);
 
             const initializeMsal = async () => {
-                const msal = new msal.PublicClientApplication(MSAL_CONFIG);
-                await msal.initialize();
-                setMsalInstance(msal);
+                const msalInstance = new window.msal.PublicClientApplication(MSAL_CONFIG);
+                await msalInstance.initialize();
+                setMsalInstance(msalInstance);
 
-                const accounts = msal.getAllAccounts();
+                const accounts = msalInstance.getAllAccounts();
                 if (accounts.length > 0) {
                     setIsSignedIn(true);
-                    await getAccessToken(msal, accounts[0]);
+                    await getAccessToken(msalInstance, accounts[0]);
                 }
             };
 
@@ -1105,7 +1105,7 @@
                     <div className="app-container">
                         <header className="header">
                             <div className="header-left">
-                                <h1>Budget Tracker Pro</h1>
+                                <h1>DBCC Budget Tracker</h1>
                                 <p>OneDrive Edition</p>
                             </div>
                         </header>
@@ -1159,7 +1159,7 @@
                     <div className="app-container">
                         <header className="header">
                             <div className="header-left">
-                                <h1>Budget Tracker Pro</h1>
+                                <h1>DBCC Budget Tracker</h1>
                                 <p>OneDrive Edition</p>
                             </div>
                         </header>
@@ -1186,7 +1186,7 @@
                 <div className="app-container">
                     <header className="header">
                         <div className="header-left">
-                            <h1>Budget Tracker Pro</h1>
+                            <h1>DBCC Budget Tracker</h1>
                             <p>Real-time budget management for your team</p>
                         </div>
                         <div style={{ display: 'flex', gap: '1rem' }}>
