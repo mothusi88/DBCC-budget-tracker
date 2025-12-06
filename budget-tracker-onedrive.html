@@ -461,28 +461,26 @@
         /* Budget Period Selector */
         .budget-period-selector {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.25rem;
             align-items: center;
-            background: white;
-            padding: 0.5rem;
-            border-radius: 8px;
-            border: 1px solid #e9ecef;
         }
 
         .period-label {
-            font-size: 0.85rem;
-            color: #6c757d;
-            font-weight: 600;
+            font-size: 0.75rem;
+            color: #9ca3af;
+            font-weight: 500;
+            margin-right: 0.25rem;
         }
 
         .period-btn {
-            padding: 0.5rem 1rem;
+            padding: 0.25rem 0.5rem;
             border: 1px solid #e9ecef;
             background: white;
-            border-radius: 6px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             transition: all 0.2s;
+            color: #6c757d;
         }
 
         .period-btn:hover {
@@ -497,17 +495,16 @@
         }
 
         .btn-add-item {
-            padding: 0.5rem 1rem;
+            padding: 0.35rem 0.75rem;
             background: white;
-            color: #6c757d;
-            border: 1px dashed #cbd5e1;
-            font-size: 0.85rem;
+            color: #9ca3af;
+            border: 1px solid #e9ecef;
+            font-size: 0.75rem;
         }
 
         .btn-add-item:hover {
             border-color: #1e40af;
             color: #1e40af;
-            border-style: solid;
         }
 
         /* Item notes - expanded view */
@@ -690,8 +687,8 @@
             const [showSetupModal, setShowSetupModal] = useState(false);
             const [showAddItemModal, setShowAddItemModal] = useState(false);
             const [notification, setNotification] = useState(null);
-            const [currentPeriod, setCurrentPeriod] = useState('2024-25');
-            const [budgetPeriods] = useState(['2022-23', '2023-24', '2024-25', '2025-26']);
+            const [currentPeriod, setCurrentPeriod] = useState('25/26');
+            const [budgetPeriods] = useState(['24/25', '25/26', '26/27']);
             const [setupYearData, setSetupYearData] = useState([]);
             const [newFiscalYear, setNewFiscalYear] = useState('');
 
@@ -718,7 +715,26 @@
 
             useEffect(() => {
                 initializeMsal();
+                checkAndSwitchFiscalYear();
             }, []);
+
+            const checkAndSwitchFiscalYear = () => {
+                // Auto-switch to next fiscal year in April
+                const now = new Date();
+                const currentMonth = now.getMonth(); // 0 = Jan, 3 = Apr
+                
+                // If it's April or later, and we're still on last year's period
+                if (currentMonth >= 3) { // April = month 3
+                    const currentYear = now.getFullYear();
+                    const nextYear = currentYear + 1;
+                    const expectedPeriod = `${currentYear.toString().slice(-2)}/${nextYear.toString().slice(-2)}`;
+                    
+                    // Check if we need to switch
+                    if (currentPeriod !== expectedPeriod) {
+                        setCurrentPeriod(expectedPeriod);
+                    }
+                }
+            };
 
             const initializeMsal = async () => {
                 const msalInstance = new window.msal.PublicClientApplication(MSAL_CONFIG);
@@ -1065,7 +1081,7 @@
                 // Deep clone current budget data to prefill the setup
                 const clonedData = JSON.parse(JSON.stringify(budgets));
                 setSetupYearData(clonedData);
-                setNewFiscalYear('2025-26'); // Default next year
+                setNewFiscalYear('26/27'); // Default next year
                 setShowSetupModal(true);
             };
 
@@ -1096,6 +1112,16 @@
                         if (item) {
                             item.budget = parseFloat(newAmount) || 0;
                         }
+                        
+                        // Auto-calculate sub-category total from items
+                        if (subCat.items.length > 0) {
+                            subCat.totalAmount = subCat.items.reduce((sum, item) => sum + (item.budget || 0), 0);
+                        }
+                    }
+                    
+                    // Auto-calculate main category total from sub-categories
+                    if (mainCat.subCategories.length > 0) {
+                        mainCat.totalAmount = mainCat.subCategories.reduce((sum, sub) => sum + (sub.totalAmount || 0), 0);
                     }
                 }
                 setSetupYearData(updated);
@@ -1162,6 +1188,7 @@
             }
 
             const stats = calculateStats();
+            const currentMonth = new Date().getMonth();
 
             return (
                 <div className="container">
@@ -1202,6 +1229,9 @@
                         <div className="stat-card">
                             <div className="stat-label">Total Budget (FY {currentPeriod})</div>
                             <div className="stat-value">{formatCurrency(stats.totalBudget)}</div>
+                            <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.25rem' }}>
+                                {currentMonth >= 3 ? 'Current year (auto-switched in April)' : 'Current year'}
+                            </div>
                         </div>
                         <div className="stat-card">
                             <div className="stat-label">Total Spent</div>
@@ -1550,6 +1580,11 @@
                                     Below is your current budget structure. You can edit amounts, delete items, or add new ones. 
                                     Click "Create New Year" when ready.
                                 </p>
+
+                                <div style={{ background: '#eff6ff', padding: '0.75rem', borderRadius: '6px', marginBottom: '1rem', fontSize: '0.85rem', color: '#1e40af', border: '1px solid #bfdbfe' }}>
+                                    💡 <strong>Tip:</strong> You can also use "Setup New Year" to edit the current year ({currentPeriod}) budget. 
+                                    Just set the fiscal year to {currentPeriod} and make your changes.
+                                </div>
 
                                 <div style={{ maxHeight: '400px', overflowY: 'auto', border: '1px solid #e9ecef', borderRadius: '8px', padding: '1rem' }}>
                                     {setupYearData.map((mainCat) => (
