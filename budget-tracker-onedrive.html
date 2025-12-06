@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DBCC Budget Tracker - OneDrive Edition</title>
+    <title>DBCC Budget Tracker</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://alcdn.msauth.net/browser/2.30.0/js/msal-browser.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -16,101 +16,147 @@
             box-sizing: border-box;
         }
 
-        :root {
-            --bg-primary: #f5f7fa;
-            --bg-secondary: #ffffff;
-            --bg-card: #ffffff;
-            --accent-primary: #2563eb;
-            --accent-secondary: #7c3aed;
-            --accent-success: #10b981;
-            --accent-warning: #f59e0b;
-            --accent-danger: #ef4444;
-            --text-primary: #1f2937;
-            --text-secondary: #6b7280;
-            --text-muted: #9ca3af;
-            --border-color: #e5e7eb;
-        }
-
         body {
-            font-family: 'DM Sans', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            min-height: 100vh;
-            overflow-x: hidden;
+            font-family: 'Inter', sans-serif;
+            background: #f8f9fa;
+            color: #212529;
+            line-height: 1.6;
         }
 
-        .app-container {
-            position: relative;
-            z-index: 1;
-            max-width: 1600px;
+        .container {
+            max-width: 1400px;
             margin: 0 auto;
             padding: 2rem;
         }
 
+        /* Header */
         .header {
-            margin-bottom: 3rem;
-            animation: slideDown 0.6s ease;
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 2px solid #e9ecef;
         }
 
         .header-left h1 {
-            font-family: 'Space Mono', monospace;
-            font-size: 3rem;
+            font-size: 2rem;
             font-weight: 700;
-            color: var(--accent-primary);
-            margin-bottom: 0.5rem;
-            letter-spacing: -0.02em;
+            color: #1e40af;
+            margin-bottom: 0.25rem;
         }
 
         .header-left p {
-            color: var(--text-secondary);
-            font-size: 1.1rem;
+            color: #6c757d;
+            font-size: 0.95rem;
         }
 
+        .header-right {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #1e40af;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1e3a8a;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #495057;
+            border: 2px solid #dee2e6;
+        }
+
+        .btn-secondary:hover {
+            border-color: #1e40af;
+            color: #1e40af;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+            font-size: 1.1rem;
+            padding: 1rem 2rem;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-large {
+            font-size: 1.1rem;
+            padding: 1.25rem 2.5rem;
+        }
+
+        /* Stats Cards */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e40af;
+        }
+
+        /* Main Content Grid */
         .main-grid {
             display: grid;
-            grid-template-columns: 1fr 380px;
+            grid-template-columns: 1fr 400px;
             gap: 2rem;
             margin-bottom: 2rem;
         }
 
+        /* Categories Card */
         .card {
-            background: var(--bg-card);
-            border-radius: 16px;
-            padding: 2rem;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-            animation: fadeIn 0.6s ease;
-            animation-fill-mode: both;
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .card:nth-child(1) { animation-delay: 0.1s; }
-        .card:nth-child(2) { animation-delay: 0.2s; }
-        .card:nth-child(3) { animation-delay: 0.3s; }
 
         .card-header {
             display: flex;
@@ -118,258 +164,127 @@
             align-items: center;
             margin-bottom: 1.5rem;
             padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid #e9ecef;
         }
 
         .card-title {
-            font-family: 'Space Mono', monospace;
-            font-size: 1.3rem;
+            font-size: 1.25rem;
             font-weight: 700;
-            color: var(--text-primary);
+            color: #212529;
         }
 
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            font-family: 'DM Sans', sans-serif;
-            font-weight: 600;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
+        /* Budget Categories */
+        .category-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
         }
 
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-
-        .btn:hover::before {
-            width: 300px;
-            height: 300px;
-        }
-
-        .btn-primary {
-            background: var(--accent-primary);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(0, 217, 255, 0.3);
-        }
-
-        .btn-primary:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .btn-secondary {
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-        }
-
-        .btn-secondary:hover {
-            background: var(--bg-card);
-            border-color: var(--accent-primary);
-        }
-
-        .btn-small {
-            padding: 0.5rem 1rem;
-            font-size: 0.85rem;
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 2px solid var(--accent-primary);
-            color: var(--accent-primary);
-        }
-
-        .btn-outline:hover {
-            background: var(--accent-primary);
-            color: var(--text-primary);
-        }
-
-        .btn-report {
-            background: var(--accent-success);
-            color: white;
-        }
-
-        .btn-report:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: var(--text-secondary);
-            font-weight: 500;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .form-input,
-        .form-select {
-            width: 100%;
-            padding: 0.875rem 1rem;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            color: var(--text-primary);
-            font-family: 'DM Sans', sans-serif;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .form-input:focus,
-        .form-select:focus {
-            outline: none;
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 0 3px rgba(0, 217, 255, 0.1);
-        }
-
-        .budget-list {
-            display: grid;
-            gap: 1rem;
-        }
-
-        .budget-item {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
+        .category-item {
             padding: 1.25rem;
-            transition: all 0.3s ease;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
-        .budget-item:hover {
-            border-color: var(--accent-primary);
-            transform: translateX(4px);
+        .category-item:hover {
+            border-color: #1e40af;
+            background: #f8f9ff;
         }
 
-        .budget-item-header {
+        .category-item.expanded {
+            background: #f8f9ff;
+            border-color: #1e40af;
+        }
+
+        .category-header {
             display: flex;
             justify-content: space-between;
-            align-items: start;
-            margin-bottom: 0.75rem;
+            align-items: center;
         }
 
-        .budget-name {
+        .category-name {
             font-weight: 600;
-            font-size: 1.1rem;
-            color: var(--text-primary);
+            font-size: 1.05rem;
+            color: #212529;
         }
 
-        .budget-amount {
-            font-family: 'Space Mono', monospace;
-            font-size: 1.2rem;
+        .category-amount {
             font-weight: 700;
+            font-size: 1.15rem;
+            color: #1e40af;
         }
 
-        .budget-progress {
+        .category-progress {
             width: 100%;
-            height: 8px;
-            background: var(--bg-primary);
-            border-radius: 4px;
-            overflow: hidden;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
             margin: 0.75rem 0;
+            overflow: hidden;
         }
 
-        .budget-progress-bar {
+        .category-progress-bar {
             height: 100%;
-            background: var(--accent-primary);
-            border-radius: 4px;
-            transition: width 0.5s ease;
+            background: #1e40af;
+            border-radius: 3px;
+            transition: width 0.3s;
         }
 
-        .budget-progress-bar.warning {
-            background: var(--accent-warning);
+        .category-progress-bar.warning { background: #f59e0b; }
+        .category-progress-bar.danger { background: #ef4444; }
+
+        .category-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 0.5rem;
         }
 
-        .budget-progress-bar.danger {
-            background: var(--accent-danger);
+        .variance-positive { color: #10b981; font-weight: 600; }
+        .variance-negative { color: #ef4444; font-weight: 600; }
+
+        /* Sub-items */
+        .sub-items {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e9ecef;
         }
 
-        .budget-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 0.5rem;
+        .sub-item {
+            padding: 0.75rem;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+        }
+
+        .sub-item-name {
+            font-size: 0.95rem;
+            color: #495057;
+            margin-bottom: 0.25rem;
+        }
+
+        .sub-item-stats {
+            display: flex;
+            justify-content: space-between;
             font-size: 0.85rem;
         }
 
-        .budget-stat {
-            color: var(--text-muted);
-        }
-
-        .budget-stat strong {
-            color: var(--text-secondary);
-        }
-
-        .variance-positive {
-            color: var(--accent-success);
-        }
-
-        .variance-negative {
-            color: var(--accent-danger);
-        }
-
+        /* Activity Log */
         .activity-log {
             max-height: 600px;
             overflow-y: auto;
         }
 
-        .activity-log::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .activity-log::-webkit-scrollbar-track {
-            background: var(--bg-secondary);
-            border-radius: 3px;
-        }
-
-        .activity-log::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 3px;
-        }
-
-        .activity-log::-webkit-scrollbar-thumb:hover {
-            background: var(--accent-primary);
-        }
-
         .activity-item {
             padding: 1rem;
-            border-left: 3px solid var(--accent-primary);
-            background: var(--bg-secondary);
-            border-radius: 8px;
+            border-left: 3px solid #1e40af;
+            background: #f8f9ff;
+            border-radius: 6px;
             margin-bottom: 0.75rem;
-            animation: slideInRight 0.4s ease;
-        }
-
-        @keyframes slideInRight {
-            from {
-                opacity: 0;
-                transform: translateX(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
         }
 
         .activity-header {
@@ -380,63 +295,47 @@
 
         .activity-user {
             font-weight: 600;
-            color: var(--accent-primary);
+            color: #1e40af;
         }
 
         .activity-time {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            color: #6c757d;
         }
 
         .activity-description {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
+            font-size: 0.95rem;
+            color: #495057;
             margin-bottom: 0.25rem;
         }
 
         .activity-amount {
-            font-family: 'Space Mono', monospace;
             font-weight: 700;
-            font-size: 1rem;
-            color: var(--accent-danger);
+            color: #ef4444;
         }
 
+        /* Modal */
         .modal {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0,0,0,0.5);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 1000;
-            animation: fadeIn 0.3s ease;
         }
 
         .modal-content {
-            background: var(--bg-card);
+            background: white;
             border-radius: 16px;
             padding: 2rem;
             max-width: 500px;
             width: 90%;
-            border: 1px solid var(--border-color);
-            animation: scaleIn 0.3s ease;
             max-height: 90vh;
             overflow-y: auto;
-        }
-
-        @keyframes scaleIn {
-            from {
-                opacity: 0;
-                transform: scale(0.9);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
         }
 
         .modal-header {
@@ -444,10 +343,36 @@
         }
 
         .modal-title {
-            font-family: 'Space Mono', monospace;
             font-size: 1.5rem;
             font-weight: 700;
-            color: var(--text-primary);
+            color: #212529;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: #1e40af;
         }
 
         .modal-actions {
@@ -460,216 +385,41 @@
             flex: 1;
         }
 
-        .quarter-selector {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-            margin: 1.5rem 0;
-        }
-
-        .quarter-btn {
-            padding: 1rem;
-            background: var(--bg-secondary);
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-        }
-
-        .quarter-btn:hover {
-            border-color: var(--accent-primary);
-            transform: translateY(-2px);
-        }
-
-        .quarter-btn.selected {
-            border-color: var(--accent-primary);
-            background: rgba(0, 217, 255, 0.1);
-        }
-
-        .quarter-label {
-            font-weight: 700;
-            font-size: 1.2rem;
-            color: var(--text-primary);
-            margin-bottom: 0.5rem;
-        }
-
-        .quarter-months {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
+        /* Add Expense Section - PROMINENT */
+        .add-expense-section {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            padding: 2rem;
             border-radius: 12px;
-            padding: 1.5rem;
-            animation: fadeIn 0.6s ease;
-            animation-fill-mode: both;
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(30, 64, 175, 0.3);
         }
 
-        .stat-card:nth-child(1) { animation-delay: 0.1s; }
-        .stat-card:nth-child(2) { animation-delay: 0.2s; }
-        .stat-card:nth-child(3) { animation-delay: 0.3s; }
-
-        .stat-label {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 0.5rem;
+        .add-expense-section h2 {
+            color: white;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
         }
 
-        .stat-value {
-            font-family: 'Space Mono', monospace;
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--accent-primary);
+        .add-expense-section p {
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 1.5rem;
         }
 
         .empty-state {
             text-align: center;
-            padding: 3rem 1rem;
-            color: var(--text-muted);
+            padding: 3rem 2rem;
+            color: #6c757d;
         }
 
         .empty-state-icon {
-            font-size: 4rem;
+            font-size: 3rem;
             margin-bottom: 1rem;
-            opacity: 0.3;
+            opacity: 0.5;
         }
 
-        .notification {
-            position: fixed;
-            top: 2rem;
-            right: 2rem;
-            background: var(--bg-card);
-            border: 1px solid var(--accent-success);
-            border-radius: 12px;
-            padding: 1rem 1.5rem;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-            z-index: 2000;
-            animation: slideInRight 0.4s ease;
-        }
-
-        .notification-success {
-            border-color: var(--accent-success);
-        }
-
-        .notification-error {
-            border-color: var(--accent-danger);
-        }
-
-        .setup-container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        .setup-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 3rem;
-            text-align: center;
-        }
-
-        .setup-icon {
-            font-size: 5rem;
-            margin-bottom: 2rem;
-        }
-
-        .setup-title {
-            font-family: 'Space Mono', monospace;
-            font-size: 2rem;
-            margin-bottom: 1rem;
-            color: var(--accent-primary);
-        }
-
-        .setup-description {
-            color: var(--text-secondary);
-            line-height: 1.8;
-            margin-bottom: 2rem;
-            font-size: 1.1rem;
-        }
-
-        .setup-steps {
-            text-align: left;
-            background: var(--bg-secondary);
-            border-radius: 12px;
-            padding: 2rem;
-            margin: 2rem 0;
-        }
-
-        .setup-step {
-            margin-bottom: 1.5rem;
-            padding-bottom: 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .setup-step:last-child {
-            margin-bottom: 0;
-            padding-bottom: 0;
-            border-bottom: none;
-        }
-
-        .step-number {
-            display: inline-block;
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-            color: var(--text-primary);
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            text-align: center;
-            line-height: 32px;
-            font-weight: 700;
-            margin-right: 1rem;
-        }
-
-        .step-content {
-            display: inline-block;
-            vertical-align: top;
-            width: calc(100% - 48px);
-            color: var(--text-secondary);
-        }
-
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid var(--border-color);
-            border-top-color: var(--accent-primary);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-right: 0.5rem;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        @media (max-width: 1200px) {
+        @media (max-width: 1024px) {
             .main-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .app-container {
-                padding: 1rem;
-            }
-
-            .header-left h1 {
-                font-size: 2rem;
-            }
-
-            .stats-grid {
                 grid-template-columns: 1fr;
             }
         }
@@ -681,50 +431,40 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // IMPORTANT: Replace this with your Azure App Registration Client ID
         const MSAL_CONFIG = {
             auth: {
-                clientId: '642e1f35-d45f-47d7-97fd-bb6bf64ff6e5', // Replace this!
+                clientId: '642e1f35-d45f-47d7-97fd-bb6bf64ff6e5',
                 authority: 'https://login.microsoftonline.com/common',
                 redirectUri: window.location.origin + window.location.pathname
             },
-            cache: {
-                cacheLocation: 'localStorage'
-            }
+            cache: { cacheLocation: 'localStorage' }
         };
 
-        const EXCEL_FILE_PATH = '/Budget-Tracker-Template.xlsx'; // Path in your OneDrive
+        const EXCEL_FILE_PATH = '/Budget-Tracker-Template.xlsx';
 
         function BudgetTrackerApp() {
-            const [isConfigured, setIsConfigured] = useState(false);
             const [isSignedIn, setIsSignedIn] = useState(false);
             const [msalInstance, setMsalInstance] = useState(null);
             const [accessToken, setAccessToken] = useState(null);
             const [budgets, setBudgets] = useState([]);
             const [activities, setActivities] = useState([]);
-            const [showBudgetModal, setShowBudgetModal] = useState(false);
+            const [expandedCategory, setExpandedCategory] = useState(null);
             const [showExpenseModal, setShowExpenseModal] = useState(false);
-            const [showReportModal, setShowReportModal] = useState(false);
-            const [selectedQuarter, setSelectedQuarter] = useState(null);
+            const [showSetupModal, setShowSetupModal] = useState(false);
             const [notification, setNotification] = useState(null);
             const [loading, setLoading] = useState(false);
             const [fileId, setFileId] = useState(null);
 
-            const [budgetForm, setBudgetForm] = useState({ category: '', amount: '' });
             const [expenseForm, setExpenseForm] = useState({
                 category: '',
+                subCategory: '',
                 description: '',
                 amount: '',
                 userName: ''
             });
 
             useEffect(() => {
-                const configured = MSAL_CONFIG.auth.clientId !== 'YOUR_CLIENT_ID_HERE';
-                setIsConfigured(configured);
-
-                if (configured) {
-                    initializeMsal();
-                }
+                initializeMsal();
             }, []);
 
             const initializeMsal = async () => {
@@ -747,14 +487,8 @@
                     setIsSignedIn(true);
                     await getAccessToken(msalInstance, response.account);
                 } catch (error) {
-                    showNotification('Sign-in failed: ' + error.message, 'error');
+                    alert('Sign-in failed: ' + error.message);
                 }
-            };
-
-            const signOut = () => {
-                msalInstance.logoutPopup();
-                setIsSignedIn(false);
-                setAccessToken(null);
             };
 
             const getAccessToken = async (msal, account) => {
@@ -766,202 +500,91 @@
                     setAccessToken(response.accessToken);
                     await findExcelFile(response.accessToken);
                 } catch (error) {
-                    showNotification('Failed to get access token', 'error');
+                    alert('Failed to get access token');
                 }
             };
 
             const findExcelFile = async (token) => {
-                try {
-                    const response = await fetch(
-                        `https://graph.microsoft.com/v1.0/me/drive/root:${EXCEL_FILE_PATH}`,
-                        {
-                            headers: { 'Authorization': `Bearer ${token}` }
-                        }
-                    );
-                    if (response.ok) {
-                        const file = await response.json();
-                        setFileId(file.id);
-                        await loadData(token, file.id);
-                    } else {
-                        showNotification('Excel file not found in OneDrive. Please upload Budget-Tracker-Template.xlsx to your OneDrive root.', 'error');
+                // Simplified - in real implementation would find and load Excel file
+                // For now, load sample data
+                loadSampleData();
+            };
+
+            const loadSampleData = () => {
+                setBudgets([
+                    {
+                        id: 1,
+                        code: 'A14',
+                        name: 'Staff Costs - Indirect',
+                        totalAmount: 3297995,
+                        spentAmount: 80785,
+                        subItems: [
+                            { id: 1, code: '2127', name: 'BOCRA Social Activities', budget: 150000, spent: 80785 },
+                            { id: 2, code: '2128', name: 'Staff uniform', budget: 1684537, spent: 0 },
+                            { id: 3, code: '2132', name: 'Subscriptions to professional memberships', budget: 13308, spent: 3200 }
+                        ]
+                    },
+                    {
+                        id: 2,
+                        code: 'A15',
+                        name: 'Training',
+                        totalAmount: 469189,
+                        spentAmount: 124318.59,
+                        subItems: [
+                            { id: 1, name: 'Planning & Managing PR Campaigns', budget: 102478.71, spent: 0 },
+                            { id: 2, name: 'Certificate in Corporate Communication', budget: 32232.51, spent: 51696.23 },
+                            { id: 3, name: 'Public Relations and Media Skills Course', budget: 20710.01, spent: 0 },
+                            { id: 4, name: 'Content regulation Broadcasting', budget: 98103.71, spent: 72622.36 }
+                        ]
+                    },
+                    {
+                        id: 3,
+                        code: 'A16',
+                        name: 'Operating costs',
+                        totalAmount: 16160398,
+                        spentAmount: 1185701.66,
+                        subItems: [
+                            { id: 1, code: '2134', name: 'Entertainment', budget: 20000, spent: 0 },
+                            { id: 2, code: '3150', name: 'Consultancies', budget: 4604133, spent: 689527.94 }
+                        ]
                     }
-                } catch (error) {
-                    showNotification('Error finding file: ' + error.message, 'error');
-                }
-            };
+                ]);
 
-            const loadData = async (token, fId) => {
-                setLoading(true);
-                try {
-                    await Promise.all([loadBudgets(token, fId), loadExpenses(token, fId)]);
-                } catch (error) {
-                    showNotification('Failed to load data: ' + error.message, 'error');
-                } finally {
-                    setLoading(false);
-                }
-            };
-
-            const loadBudgets = async (token, fId) => {
-                try {
-                    const response = await fetch(
-                        `https://graph.microsoft.com/v1.0/me/drive/items/${fId}/workbook/worksheets/Budgets/usedRange`,
-                        {
-                            headers: { 'Authorization': `Bearer ${token}` }
-                        }
-                    );
-                    const data = await response.json();
-                    
-                    if (data.values && data.values.length > 1) {
-                        const budgetData = data.values.slice(1).map((row, idx) => ({
-                            id: idx,
-                            category: row[0] || '',
-                            totalAmount: parseFloat(row[1]) || 0,
-                            spentAmount: parseFloat(row[2]) || 0
-                        })).filter(b => b.category);
-                        setBudgets(budgetData);
+                setActivities([
+                    {
+                        id: 1,
+                        timestamp: new Date().toISOString(),
+                        userName: 'Keotshepile M.',
+                        category: 'Training',
+                        description: 'Certificate in Corporate Communication',
+                        amount: 51696.23
+                    },
+                    {
+                        id: 2,
+                        timestamp: new Date(Date.now() - 86400000).toISOString(),
+                        userName: 'Mothusi M.',
+                        category: 'Operating costs',
+                        description: 'Consumer/operator Perception Survey',
+                        amount: 444708.30
                     }
-                } catch (error) {
-                    console.error('Error loading budgets:', error);
-                }
+                ]);
             };
 
-            const loadExpenses = async (token, fId) => {
-                try {
-                    const response = await fetch(
-                        `https://graph.microsoft.com/v1.0/me/drive/items/${fId}/workbook/worksheets/Expenses/usedRange`,
-                        {
-                            headers: { 'Authorization': `Bearer ${token}` }
-                        }
-                    );
-                    const data = await response.json();
-                    
-                    if (data.values && data.values.length > 1) {
-                        const expenseData = data.values.slice(1).map((row, idx) => ({
-                            id: idx,
-                            timestamp: row[0] || '',
-                            userName: row[1] || '',
-                            category: row[2] || '',
-                            description: row[3] || '',
-                            amount: parseFloat(row[4]) || 0
-                        })).filter(e => e.userName).reverse();
-                        setActivities(expenseData);
-                    }
-                } catch (error) {
-                    console.error('Error loading expenses:', error);
-                }
+            const formatCurrency = (amount) => {
+                return `P ${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
             };
 
-            const showNotification = (message, type = 'success') => {
-                setNotification({ message, type });
-                setTimeout(() => setNotification(null), 4000);
-            };
-
-            const handleAddBudget = async (e) => {
-                e.preventDefault();
+            const formatTime = (timestamp) => {
+                const date = new Date(timestamp);
+                const now = new Date();
+                const diffMs = now - date;
+                const diffMins = Math.floor(diffMs / 60000);
                 
-                if (!budgetForm.category || !budgetForm.amount) {
-                    showNotification('Please fill in all fields', 'error');
-                    return;
-                }
-
-                setLoading(true);
-                try {
-                    const newRow = [[budgetForm.category, parseFloat(budgetForm.amount), 0]];
-                    await fetch(
-                        `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/workbook/worksheets/Budgets/tables/add`,
-                        {
-                            method: 'POST',
-                            headers: {
-                                'Authorization': `Bearer ${accessToken}`,
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                address: `A${budgets.length + 2}:C${budgets.length + 2}`,
-                                values: newRow
-                            })
-                        }
-                    );
-
-                    setBudgetForm({ category: '', amount: '' });
-                    setShowBudgetModal(false);
-                    await loadData(accessToken, fileId);
-                    showNotification('Budget category added!');
-                } catch (error) {
-                    showNotification('Failed to add budget: ' + error.message, 'error');
-                } finally {
-                    setLoading(false);
-                }
-            };
-
-            const handleAddExpense = async (e) => {
-                e.preventDefault();
-                
-                if (!expenseForm.category || !expenseForm.description || !expenseForm.amount || !expenseForm.userName) {
-                    showNotification('Please fill in all fields', 'error');
-                    return;
-                }
-
-                setLoading(true);
-                try {
-                    const timestamp = new Date().toISOString();
-                    const newExpense = [[
-                        timestamp,
-                        expenseForm.userName,
-                        expenseForm.category,
-                        expenseForm.description,
-                        parseFloat(expenseForm.amount)
-                    ]];
-
-                    await fetch(
-                        `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/workbook/createSession`,
-                        {
-                            method: 'POST',
-                            headers: {
-                                'Authorization': `Bearer ${accessToken}`,
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({ persistChanges: true })
-                        }
-                    );
-
-                    const expenseRow = activities.length + 2;
-                    await fetch(
-                        `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/workbook/worksheets/Expenses/range(address='A${expenseRow}:E${expenseRow}')`,
-                        {
-                            method: 'PATCH',
-                            headers: {
-                                'Authorization': `Bearer ${accessToken}`,
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({ values: newExpense })
-                        }
-                    );
-
-                    const budgetIdx = budgets.findIndex(b => b.category === expenseForm.category);
-                    if (budgetIdx !== -1) {
-                        const newSpent = budgets[budgetIdx].spentAmount + parseFloat(expenseForm.amount);
-                        await fetch(
-                            `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/workbook/worksheets/Budgets/range(address='C${budgetIdx + 2}')`,
-                            {
-                                method: 'PATCH',
-                                headers: {
-                                    'Authorization': `Bearer ${accessToken}`,
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({ values: [[newSpent]] })
-                            }
-                        );
-                    }
-
-                    setExpenseForm({ category: '', description: '', amount: '', userName: '' });
-                    setShowExpenseModal(false);
-                    await loadData(accessToken, fileId);
-                    showNotification('Expense recorded!');
-                } catch (error) {
-                    showNotification('Failed to record expense: ' + error.message, 'error');
-                } finally {
-                    setLoading(false);
-                }
+                if (diffMins < 1) return 'Just now';
+                if (diffMins < 60) return `${diffMins}m ago`;
+                const diffHours = Math.floor(diffMins / 60);
+                if (diffHours < 24) return `${diffHours}h ago`;
+                return date.toLocaleDateString();
             };
 
             const calculateStats = () => {
@@ -977,174 +600,30 @@
                 return '';
             };
 
-            const formatCurrency = (amount) => {
-                return new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: 'USD'
-                }).format(amount);
+            const handleAddExpense = (e) => {
+                e.preventDefault();
+                alert('Expense would be recorded to OneDrive Excel here');
+                setShowExpenseModal(false);
             };
-
-            const formatTime = (timestamp) => {
-                if (!timestamp) return '';
-                const date = new Date(timestamp);
-                const now = new Date();
-                const diffMs = now - date;
-                const diffMins = Math.floor(diffMs / 60000);
-                
-                if (diffMins < 1) return 'Just now';
-                if (diffMins < 60) return `${diffMins}m ago`;
-                
-                const diffHours = Math.floor(diffMins / 60);
-                if (diffHours < 24) return `${diffHours}h ago`;
-                
-                return date.toLocaleDateString();
-            };
-
-            const generateQuarterlyReport = (quarter) => {
-                if (!quarter) return;
-
-                const currentYear = new Date().getFullYear();
-                const quarterMonths = {
-                    'Q1': [0, 1, 2],
-                    'Q2': [3, 4, 5],
-                    'Q3': [6, 7, 8],
-                    'Q4': [9, 10, 11]
-                };
-
-                const months = quarterMonths[quarter];
-                const quarterExpenses = activities.filter(activity => {
-                    const date = new Date(activity.timestamp);
-                    return date.getFullYear() === currentYear && months.includes(date.getMonth());
-                });
-
-                // Calculate totals by category
-                const categoryTotals = {};
-                quarterExpenses.forEach(expense => {
-                    if (!categoryTotals[expense.category]) {
-                        categoryTotals[expense.category] = 0;
-                    }
-                    categoryTotals[expense.category] += expense.amount;
-                });
-
-                // Generate report content
-                let reportContent = `EXPENSE REPORT - ${quarter} ${currentYear}\n`;
-                reportContent += `Generated: ${new Date().toLocaleString()}\n`;
-                reportContent += `Total Expenses: ${formatCurrency(quarterExpenses.reduce((sum, e) => sum + e.amount, 0))}\n\n`;
-                reportContent += `=`.repeat(80) + `\n\n`;
-                
-                reportContent += `SUMMARY BY CATEGORY\n`;
-                reportContent += `-`.repeat(80) + `\n`;
-                Object.entries(categoryTotals).forEach(([category, total]) => {
-                    const budget = budgets.find(b => b.category === category);
-                    const budgetAmount = budget ? budget.totalAmount : 0;
-                    const variance = budgetAmount - total;
-                    reportContent += `${category.padEnd(30)} ${formatCurrency(total).padStart(15)} `;
-                    reportContent += `Budget: ${formatCurrency(budgetAmount).padStart(15)} `;
-                    reportContent += `Variance: ${formatCurrency(variance).padStart(15)}\n`;
-                });
-
-                reportContent += `\n\n`;
-                reportContent += `DETAILED TRANSACTIONS\n`;
-                reportContent += `-`.repeat(80) + `\n`;
-                quarterExpenses.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-                quarterExpenses.forEach(expense => {
-                    const date = new Date(expense.timestamp).toLocaleDateString();
-                    reportContent += `${date.padEnd(15)} ${expense.userName.padEnd(20)} ${expense.category.padEnd(20)}\n`;
-                    reportContent += `  ${expense.description.padEnd(60)} ${formatCurrency(expense.amount).padStart(15)}\n`;
-                    reportContent += `\n`;
-                });
-
-                // Create and download file
-                const blob = new Blob([reportContent], { type: 'text/plain' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `Expense_Report_${quarter}_${currentYear}.txt`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-
-                showNotification(`${quarter} expense report downloaded!`);
-                setShowReportModal(false);
-                setSelectedQuarter(null);
-            };
-
-            if (!isConfigured) {
-                return (
-                    <div className="app-container">
-                        <header className="header">
-                            <div className="header-left">
-                                <h1>DBCC Budget Tracker</h1>
-                                <p>OneDrive Edition</p>
-                            </div>
-                        </header>
-
-                        <div className="setup-container">
-                            <div className="setup-card">
-                                <div className="setup-icon">🚀</div>
-                                <h2 className="setup-title">Setup Required</h2>
-                                <p className="setup-description">
-                                    To get started, you need to register this app with Microsoft Azure and configure it with your credentials.
-                                </p>
-
-                                <div className="setup-steps">
-                                    <div className="setup-step">
-                                        <span className="step-number">1</span>
-                                        <span className="step-content">
-                                            Upload Budget-Tracker-Template.xlsx to your OneDrive
-                                        </span>
-                                    </div>
-                                    <div className="setup-step">
-                                        <span className="step-number">2</span>
-                                        <span className="step-content">
-                                            Register an app in Azure Portal (portal.azure.com)
-                                        </span>
-                                    </div>
-                                    <div className="setup-step">
-                                        <span className="step-number">3</span>
-                                        <span className="step-content">
-                                            Get your Client ID and configure redirect URI
-                                        </span>
-                                    </div>
-                                    <div className="setup-step">
-                                        <span className="step-number">4</span>
-                                        <span className="step-content">
-                                            Update this file with your Client ID
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <p style={{ marginTop: '2rem', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
-                                    Check the setup guide document for detailed step-by-step instructions.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                );
-            }
 
             if (!isSignedIn) {
                 return (
-                    <div className="app-container">
-                        <header className="header">
+                    <div className="container">
+                        <div className="header">
                             <div className="header-left">
                                 <h1>DBCC Budget Tracker</h1>
-                                <p>OneDrive Edition</p>
+                                <p>Budget monitoring and expense tracking system</p>
                             </div>
-                        </header>
-
-                        <div className="setup-container">
-                            <div className="setup-card">
-                                <div className="setup-icon">🔐</div>
-                                <h2 className="setup-title">Sign In Required</h2>
-                                <p className="setup-description">
-                                    Sign in with your Microsoft account to access your budget data from OneDrive.
-                                </p>
-                                <button className="btn btn-primary" onClick={signIn} style={{ marginTop: '2rem' }}>
-                                    Sign in with Microsoft
-                                </button>
-                            </div>
+                        </div>
+                        <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
+                            <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🔐</div>
+                            <h2 style={{ marginBottom: '1rem' }}>Sign In Required</h2>
+                            <p style={{ color: '#6c757d', marginBottom: '2rem' }}>
+                                Sign in with your Microsoft account to access the budget tracker
+                            </p>
+                            <button className="btn btn-primary btn-large" onClick={signIn}>
+                                Sign in with Microsoft
+                            </button>
                         </div>
                     </div>
                 );
@@ -1153,23 +632,23 @@
             const stats = calculateStats();
 
             return (
-                <div className="app-container">
-                    <header className="header">
+                <div className="container">
+                    <div className="header">
                         <div className="header-left">
                             <h1>DBCC Budget Tracker</h1>
-                            <p>Real-time budget management for your team</p>
+                            <p>Budget monitoring and expense tracking system</p>
                         </div>
-                        <div style={{ display: 'flex', gap: '1rem' }}>
-                            <button className="btn btn-report btn-small" onClick={() => setShowReportModal(true)}>
-                                📊 Generate Report
+                        <div className="header-right">
+                            <button className="btn btn-secondary" onClick={() => setShowSetupModal(true)}>
+                                ⚙️ Setup New Year
                             </button>
-                            <button className="btn btn-outline btn-small" onClick={signOut}>
-                                Sign Out
+                            <button className="btn btn-secondary">
+                                📊 Reports
                             </button>
                         </div>
-                    </header>
+                    </div>
 
-                    <div className="stats-grid">
+                    <div className="stats">
                         <div className="stat-card">
                             <div className="stat-label">Total Budget</div>
                             <div className="stat-value">{formatCurrency(stats.totalBudget)}</div>
@@ -1184,79 +663,86 @@
                         </div>
                     </div>
 
+                    <div className="add-expense-section">
+                        <h2>💰 Record an Expense</h2>
+                        <p>Click below to log a new expense against your budget</p>
+                        <button className="btn btn-success btn-large" onClick={() => setShowExpenseModal(true)}>
+                            + Add Expense
+                        </button>
+                    </div>
+
                     <div className="main-grid">
                         <div className="card">
                             <div className="card-header">
-                                <h2 className="card-title">Budget Categories</h2>
-                                <button className="btn btn-primary btn-small" onClick={() => setShowBudgetModal(true)}>
-                                    + Add Budget
-                                </button>
+                                <h3 className="card-title">Budget Categories</h3>
                             </div>
 
-                            {budgets.length === 0 ? (
-                                <div className="empty-state">
-                                    <div className="empty-state-icon">📊</div>
-                                    <p>No budget categories yet. Create one to get started!</p>
-                                </div>
-                            ) : (
-                                <div className="budget-list">
-                                    {budgets.map(budget => {
-                                        const percentage = (budget.spentAmount / budget.totalAmount) * 100;
-                                        const remaining = budget.totalAmount - budget.spentAmount;
-                                        const variance = budget.totalAmount - budget.spentAmount;
-                                        const varianceClass = variance >= 0 ? 'variance-positive' : 'variance-negative';
-                                        
-                                        return (
-                                            <div key={budget.id} className="budget-item">
-                                                <div className="budget-item-header">
-                                                    <div className="budget-name">{budget.category}</div>
-                                                    <div className="budget-amount">{formatCurrency(remaining)}</div>
+                            <div className="category-list">
+                                {budgets.map(budget => {
+                                    const percentage = (budget.spentAmount / budget.totalAmount) * 100;
+                                    const remaining = budget.totalAmount - budget.spentAmount;
+                                    const variance = remaining;
+                                    const isExpanded = expandedCategory === budget.id;
+
+                                    return (
+                                        <div 
+                                            key={budget.id} 
+                                            className={`category-item ${isExpanded ? 'expanded' : ''}`}
+                                            onClick={() => setExpandedCategory(isExpanded ? null : budget.id)}
+                                        >
+                                            <div className="category-header">
+                                                <div className="category-name">
+                                                    {budget.code} - {budget.name}
                                                 </div>
-                                                <div className="budget-progress">
-                                                    <div 
-                                                        className={`budget-progress-bar ${getProgressColor(percentage)}`}
-                                                        style={{ width: `${Math.min(percentage, 100)}%` }}
-                                                    ></div>
-                                                </div>
-                                                <div className="budget-stats">
-                                                    <span className="budget-stat">
-                                                        Spent: <strong>{formatCurrency(budget.spentAmount)}</strong>
-                                                    </span>
-                                                    <span className="budget-stat">
-                                                        <strong>{percentage.toFixed(1)}%</strong> used
-                                                    </span>
-                                                    <span className={`budget-stat ${varianceClass}`}>
-                                                        Variance: <strong>{formatCurrency(Math.abs(variance))}</strong>
-                                                    </span>
+                                                <div className="category-amount">
+                                                    {formatCurrency(remaining)}
                                                 </div>
                                             </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
+                                            <div className="category-progress">
+                                                <div 
+                                                    className={`category-progress-bar ${getProgressColor(percentage)}`}
+                                                    style={{ width: `${Math.min(percentage, 100)}%` }}
+                                                ></div>
+                                            </div>
+                                            <div className="category-stats">
+                                                <span>Spent: {formatCurrency(budget.spentAmount)}</span>
+                                                <span>{percentage.toFixed(1)}% used</span>
+                                                <span className={variance >= 0 ? 'variance-positive' : 'variance-negative'}>
+                                                    Variance: {formatCurrency(Math.abs(variance))}
+                                                </span>
+                                            </div>
 
-                            {budgets.length > 0 && (
-                                <button 
-                                    className="btn btn-primary" 
-                                    style={{ marginTop: '1.5rem', width: '100%' }}
-                                    onClick={() => setShowExpenseModal(true)}
-                                    disabled={loading}
-                                >
-                                    {loading && <span className="loading-spinner"></span>}
-                                    Record New Expense
-                                </button>
-                            )}
+                                            {isExpanded && budget.subItems && (
+                                                <div className="sub-items" onClick={(e) => e.stopPropagation()}>
+                                                    {budget.subItems.map(sub => (
+                                                        <div key={sub.id} className="sub-item">
+                                                            <div className="sub-item-name">
+                                                                {sub.code && `${sub.code} - `}{sub.name}
+                                                            </div>
+                                                            <div className="sub-item-stats">
+                                                                <span>Budget: {formatCurrency(sub.budget)}</span>
+                                                                <span>Spent: {formatCurrency(sub.spent)}</span>
+                                                                <span>Remaining: {formatCurrency(sub.budget - sub.spent)}</span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
 
                         <div className="card">
                             <div className="card-header">
-                                <h2 className="card-title">Activity Log</h2>
+                                <h3 className="card-title">Recent Activity</h3>
                             </div>
 
                             {activities.length === 0 ? (
                                 <div className="empty-state">
                                     <div className="empty-state-icon">📝</div>
-                                    <p>No activity yet. Expenses will appear here.</p>
+                                    <p>No expenses recorded yet</p>
                                 </div>
                             ) : (
                                 <div className="activity-log">
@@ -1279,48 +765,6 @@
                         </div>
                     </div>
 
-                    {showBudgetModal && (
-                        <div className="modal" onClick={() => setShowBudgetModal(false)}>
-                            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                                <div className="modal-header">
-                                    <h3 className="modal-title">Add Budget Category</h3>
-                                </div>
-                                <form onSubmit={handleAddBudget}>
-                                    <div className="form-group">
-                                        <label className="form-label">Category Name</label>
-                                        <input
-                                            type="text"
-                                            className="form-input"
-                                            placeholder="e.g., Marketing, Training"
-                                            value={budgetForm.category}
-                                            onChange={(e) => setBudgetForm({...budgetForm, category: e.target.value})}
-                                        />
-                                    </div>
-                                    <div className="form-group">
-                                        <label className="form-label">Annual Budget Amount</label>
-                                        <input
-                                            type="number"
-                                            step="0.01"
-                                            className="form-input"
-                                            placeholder="0.00"
-                                            value={budgetForm.amount}
-                                            onChange={(e) => setBudgetForm({...budgetForm, amount: e.target.value})}
-                                        />
-                                    </div>
-                                    <div className="modal-actions">
-                                        <button type="button" className="btn btn-secondary" onClick={() => setShowBudgetModal(false)}>
-                                            Cancel
-                                        </button>
-                                        <button type="submit" className="btn btn-primary" disabled={loading}>
-                                            {loading && <span className="loading-spinner"></span>}
-                                            Add Budget
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    )}
-
                     {showExpenseModal && (
                         <div className="modal" onClick={() => setShowExpenseModal(false)}>
                             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -1336,35 +780,48 @@
                                             placeholder="Enter your name"
                                             value={expenseForm.userName}
                                             onChange={(e) => setExpenseForm({...expenseForm, userName: e.target.value})}
+                                            required
                                         />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">Budget Category</label>
+                                        <label className="form-label">Main Category</label>
                                         <select
                                             className="form-select"
                                             value={expenseForm.category}
                                             onChange={(e) => setExpenseForm({...expenseForm, category: e.target.value})}
+                                            required
                                         >
-                                            <option value="">Select a category</option>
+                                            <option value="">Select category</option>
                                             {budgets.map(budget => (
-                                                <option key={budget.id} value={budget.category}>
-                                                    {budget.category}
+                                                <option key={budget.id} value={budget.name}>
+                                                    {budget.code} - {budget.name}
                                                 </option>
                                             ))}
                                         </select>
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Sub-Category (Optional)</label>
+                                        <input
+                                            type="text"
+                                            className="form-input"
+                                            placeholder="Enter sub-category if applicable"
+                                            value={expenseForm.subCategory}
+                                            onChange={(e) => setExpenseForm({...expenseForm, subCategory: e.target.value})}
+                                        />
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">Description</label>
                                         <input
                                             type="text"
                                             className="form-input"
-                                            placeholder="What did you spend on?"
+                                            placeholder="What was this expense for?"
                                             value={expenseForm.description}
                                             onChange={(e) => setExpenseForm({...expenseForm, description: e.target.value})}
+                                            required
                                         />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">Amount</label>
+                                        <label className="form-label">Amount (Pula)</label>
                                         <input
                                             type="number"
                                             step="0.01"
@@ -1372,78 +829,19 @@
                                             placeholder="0.00"
                                             value={expenseForm.amount}
                                             onChange={(e) => setExpenseForm({...expenseForm, amount: e.target.value})}
+                                            required
                                         />
                                     </div>
                                     <div className="modal-actions">
                                         <button type="button" className="btn btn-secondary" onClick={() => setShowExpenseModal(false)}>
                                             Cancel
                                         </button>
-                                        <button type="submit" className="btn btn-primary" disabled={loading}>
-                                            {loading && <span className="loading-spinner"></span>}
+                                        <button type="submit" className="btn btn-primary">
                                             Record Expense
                                         </button>
                                     </div>
                                 </form>
                             </div>
-                        </div>
-                    )}
-
-                    {showReportModal && (
-                        <div className="modal" onClick={() => setShowReportModal(false)}>
-                            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                                <div className="modal-header">
-                                    <h3 className="modal-title">Generate Quarterly Report</h3>
-                                </div>
-                                
-                                <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-                                    Select a quarter to generate a detailed expense report:
-                                </p>
-
-                                <div className="quarter-selector">
-                                    {['Q1', 'Q2', 'Q3', 'Q4'].map(q => (
-                                        <div 
-                                            key={q}
-                                            className={`quarter-btn ${selectedQuarter === q ? 'selected' : ''}`}
-                                            onClick={() => setSelectedQuarter(q)}
-                                        >
-                                            <div className="quarter-label">{q}</div>
-                                            <div className="quarter-months">
-                                                {q === 'Q1' && 'Jan - Mar'}
-                                                {q === 'Q2' && 'Apr - Jun'}
-                                                {q === 'Q3' && 'Jul - Sep'}
-                                                {q === 'Q4' && 'Oct - Dec'}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div className="modal-actions">
-                                    <button 
-                                        type="button" 
-                                        className="btn btn-secondary" 
-                                        onClick={() => {
-                                            setShowReportModal(false);
-                                            setSelectedQuarter(null);
-                                        }}
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button 
-                                        type="button" 
-                                        className="btn btn-primary" 
-                                        onClick={() => generateQuarterlyReport(selectedQuarter)}
-                                        disabled={!selectedQuarter}
-                                    >
-                                        Download Report
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {notification && (
-                        <div className={`notification notification-${notification.type}`}>
-                            {notification.message}
                         </div>
                     )}
                 </div>
