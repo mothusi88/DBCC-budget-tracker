@@ -17,18 +17,18 @@
         }
 
         :root {
-            --bg-primary: #0a0e27;
-            --bg-secondary: #141937;
-            --bg-card: #1a1f3a;
-            --accent-primary: #00d9ff;
+            --bg-primary: #f5f7fa;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --accent-primary: #2563eb;
             --accent-secondary: #7c3aed;
             --accent-success: #10b981;
             --accent-warning: #f59e0b;
             --accent-danger: #ef4444;
-            --text-primary: #ffffff;
-            --text-secondary: #a0aec0;
-            --text-muted: #64748b;
-            --border-color: #2d3651;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --text-muted: #9ca3af;
+            --border-color: #e5e7eb;
         }
 
         body {
@@ -37,26 +37,6 @@
             color: var(--text-primary);
             min-height: 100vh;
             overflow-x: hidden;
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: 
-                radial-gradient(circle at 20% 50%, rgba(124, 58, 237, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(0, 217, 255, 0.1) 0%, transparent 50%);
-            animation: gradientShift 15s ease infinite;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        @keyframes gradientShift {
-            0%, 100% { transform: translate(0, 0); }
-            50% { transform: translate(5%, 5%); }
         }
 
         .app-container {
@@ -90,10 +70,7 @@
             font-family: 'Space Mono', monospace;
             font-size: 3rem;
             font-weight: 700;
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: var(--accent-primary);
             margin-bottom: 0.5rem;
             letter-spacing: -0.02em;
         }
@@ -115,7 +92,7 @@
             border-radius: 16px;
             padding: 2rem;
             border: 1px solid var(--border-color);
-            backdrop-filter: blur(10px);
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
             animation: fadeIn 0.6s ease;
             animation-fill-mode: both;
         }
@@ -183,8 +160,8 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-            color: var(--text-primary);
+            background: var(--accent-primary);
+            color: white;
         }
 
         .btn-primary:hover {
@@ -225,8 +202,8 @@
         }
 
         .btn-report {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: var(--text-primary);
+            background: var(--accent-success);
+            color: white;
         }
 
         .btn-report:hover {
@@ -316,17 +293,17 @@
 
         .budget-progress-bar {
             height: 100%;
-            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            background: var(--accent-primary);
             border-radius: 4px;
             transition: width 0.5s ease;
         }
 
         .budget-progress-bar.warning {
-            background: linear-gradient(90deg, var(--accent-warning), #fb923c);
+            background: var(--accent-warning);
         }
 
         .budget-progress-bar.danger {
-            background: linear-gradient(90deg, var(--accent-danger), #dc2626);
+            background: var(--accent-danger);
         }
 
         .budget-stats {
@@ -431,8 +408,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(5px);
+            background: rgba(0, 0, 0, 0.5);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -555,10 +531,7 @@
             font-family: 'Space Mono', monospace;
             font-size: 2rem;
             font-weight: 700;
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: var(--accent-primary);
         }
 
         .empty-state {
@@ -616,10 +589,7 @@
             font-family: 'Space Mono', monospace;
             font-size: 2rem;
             margin-bottom: 1rem;
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: var(--accent-primary);
         }
 
         .setup-description {
