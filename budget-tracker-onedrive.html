@@ -439,6 +439,117 @@
             color: #ef4444;
         }
 
+        .activity-actions {
+            margin-top: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-delete {
+            padding: 0.375rem 0.75rem;
+            background: #fff;
+            color: #ef4444;
+            border: 1px solid #ef4444;
+            font-size: 0.85rem;
+        }
+
+        .btn-delete:hover {
+            background: #ef4444;
+            color: white;
+        }
+
+        /* Budget Period Selector */
+        .budget-period-selector {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            background: white;
+            padding: 0.5rem;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .period-label {
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-weight: 600;
+        }
+
+        .period-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #e9ecef;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .period-btn:hover {
+            border-color: #1e40af;
+            color: #1e40af;
+        }
+
+        .period-btn.active {
+            background: #1e40af;
+            color: white;
+            border-color: #1e40af;
+        }
+
+        .btn-add-item {
+            padding: 0.5rem 1rem;
+            background: white;
+            color: #6c757d;
+            border: 1px dashed #cbd5e1;
+            font-size: 0.85rem;
+        }
+
+        .btn-add-item:hover {
+            border-color: #1e40af;
+            color: #1e40af;
+            border-style: solid;
+        }
+
+        /* Item notes - expanded view */
+        .item-notes-full {
+            font-size: 0.85rem;
+            color: #495057;
+            margin-top: 0.5rem;
+            padding: 0.75rem;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 3px solid #1e40af;
+        }
+
+        .setup-budget-input {
+            width: 150px;
+            padding: 0.5rem;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: border-color 0.2s;
+        }
+
+        .setup-budget-input:focus {
+            outline: none;
+            border-color: #1e40af;
+        }
+
+        .setup-delete-btn {
+            padding: 0.4rem 0.6rem;
+            background: white;
+            border: 1px solid #ef4444;
+            color: #ef4444;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .setup-delete-btn:hover {
+            background: #ef4444;
+            color: white;
+        }
+
         /* Modal */
         .modal {
             position: fixed;
@@ -577,7 +688,12 @@
             const [expandedSubCategory, setExpandedSubCategory] = useState(null);
             const [showExpenseModal, setShowExpenseModal] = useState(false);
             const [showSetupModal, setShowSetupModal] = useState(false);
+            const [showAddItemModal, setShowAddItemModal] = useState(false);
             const [notification, setNotification] = useState(null);
+            const [currentPeriod, setCurrentPeriod] = useState('2024-25');
+            const [budgetPeriods] = useState(['2022-23', '2023-24', '2024-25', '2025-26']);
+            const [setupYearData, setSetupYearData] = useState([]);
+            const [newFiscalYear, setNewFiscalYear] = useState('');
 
             const [expenseForm, setExpenseForm] = useState({
                 userName: '',
@@ -588,6 +704,16 @@
                 item: '',
                 description: '',
                 amount: ''
+            });
+
+            const [addItemForm, setAddItemForm] = useState({
+                level: '1', // 1=main category, 2=sub-category, 3=item
+                mainCategoryId: null,
+                subCategoryId: null,
+                code: '',
+                name: '',
+                budget: '',
+                notes: ''
             });
 
             useEffect(() => {
@@ -875,7 +1001,8 @@
                     mainCategory: expenseForm.mainCategory,
                     subCategory: expenseForm.subCategory,
                     item: expenseForm.item,
-                    amount: parseFloat(expenseForm.amount)
+                    amount: parseFloat(expenseForm.amount),
+                    type: 'expense'
                 };
 
                 setActivities([newActivity, ...activities]);
@@ -891,6 +1018,110 @@
                     description: '',
                     amount: ''
                 });
+            };
+
+            const handleDeleteRecord = (activityId) => {
+                const activity = activities.find(a => a.id === activityId);
+                if (!activity) return;
+
+                if (confirm(`Are you sure you want to delete this ${formatCurrency(activity.amount)} expense?`)) {
+                    // Create deletion log entry
+                    const deletionLog = {
+                        id: activities.length + 1,
+                        timestamp: new Date().toISOString(),
+                        userName: 'System',
+                        mainCategory: activity.mainCategory,
+                        subCategory: activity.subCategory,
+                        item: activity.item,
+                        amount: activity.amount,
+                        type: 'deletion',
+                        deletedBy: 'Current User' // In real app, get from MSAL
+                    };
+
+                    // Remove the activity and add deletion log
+                    setActivities([deletionLog, ...activities.filter(a => a.id !== activityId)]);
+                    showNotification('Record deleted and logged');
+                }
+            };
+
+            const handleAddBudgetItem = (e) => {
+                e.preventDefault();
+                
+                // In real implementation, this would write to OneDrive Excel
+                showNotification('Budget item would be added to Excel here');
+                setShowAddItemModal(false);
+                setAddItemForm({
+                    level: '1',
+                    mainCategoryId: null,
+                    subCategoryId: null,
+                    code: '',
+                    name: '',
+                    budget: '',
+                    notes: ''
+                });
+            };
+
+            const openSetupNewYear = () => {
+                // Deep clone current budget data to prefill the setup
+                const clonedData = JSON.parse(JSON.stringify(budgets));
+                setSetupYearData(clonedData);
+                setNewFiscalYear('2025-26'); // Default next year
+                setShowSetupModal(true);
+            };
+
+            const handleSetupYearSubmit = () => {
+                // In real implementation, this would create new Excel sheet with this data
+                showNotification(`Budget for FY ${newFiscalYear} would be created in Excel`);
+                setShowSetupModal(false);
+            };
+
+            const updateSetupBudgetAmount = (mainId, subId, itemId, newAmount) => {
+                const updated = [...setupYearData];
+                const mainCat = updated.find(m => m.id === mainId);
+                if (!mainCat) return;
+
+                if (subId === null) {
+                    // Update main category
+                    mainCat.totalAmount = parseFloat(newAmount) || 0;
+                } else {
+                    const subCat = mainCat.subCategories.find(s => s.id === subId);
+                    if (!subCat) return;
+
+                    if (itemId === null) {
+                        // Update sub-category
+                        subCat.totalAmount = parseFloat(newAmount) || 0;
+                    } else {
+                        // Update item
+                        const item = subCat.items.find(i => i.id === itemId);
+                        if (item) {
+                            item.budget = parseFloat(newAmount) || 0;
+                        }
+                    }
+                }
+                setSetupYearData(updated);
+            };
+
+            const deleteSetupItem = (mainId, subId, itemId) => {
+                const updated = [...setupYearData];
+                const mainCat = updated.find(m => m.id === mainId);
+                if (!mainCat) return;
+
+                if (subId === null) {
+                    // Delete main category
+                    const filtered = updated.filter(m => m.id !== mainId);
+                    setSetupYearData(filtered);
+                } else if (itemId === null) {
+                    // Delete sub-category
+                    mainCat.subCategories = mainCat.subCategories.filter(s => s.id !== subId);
+                    setSetupYearData(updated);
+                } else {
+                    // Delete item
+                    const subCat = mainCat.subCategories.find(s => s.id === subId);
+                    if (subCat) {
+                        subCat.items = subCat.items.filter(i => i.id !== itemId);
+                        setSetupYearData(updated);
+                    }
+                }
             };
 
             const getSubCategoriesForMain = () => {
@@ -940,7 +1171,22 @@
                             <p>Budget monitoring and expense tracking system</p>
                         </div>
                         <div className="header-right">
-                            <button className="btn btn-secondary" onClick={() => setShowSetupModal(true)}>
+                            <div className="budget-period-selector">
+                                <span className="period-label">Period:</span>
+                                {budgetPeriods.map(period => (
+                                    <button
+                                        key={period}
+                                        className={`period-btn ${currentPeriod === period ? 'active' : ''}`}
+                                        onClick={() => setCurrentPeriod(period)}
+                                    >
+                                        {period}
+                                    </button>
+                                ))}
+                            </div>
+                            <button className="btn btn-add-item" onClick={() => setShowAddItemModal(true)}>
+                                + Add Budget Item
+                            </button>
+                            <button className="btn btn-secondary" onClick={openSetupNewYear}>
                                 ⚙️ Setup New Year
                             </button>
                             <button className="btn btn-secondary">
@@ -954,7 +1200,7 @@
 
                     <div className="stats">
                         <div className="stat-card">
-                            <div className="stat-label">Total Budget</div>
+                            <div className="stat-label">Total Budget (FY {currentPeriod})</div>
                             <div className="stat-value">{formatCurrency(stats.totalBudget)}</div>
                         </div>
                         <div className="stat-card">
@@ -1072,8 +1318,8 @@
                                                                                         <span>{itemPercentage.toFixed(1)}% used</span>
                                                                                     </div>
                                                                                     {item.notes && (
-                                                                                        <div className="item-notes">
-                                                                                            Note: {item.notes}
+                                                                                        <div className="item-notes-full">
+                                                                                            <strong>Notes:</strong> {item.notes}
                                                                                         </div>
                                                                                     )}
                                                                                 </div>
@@ -1114,11 +1360,27 @@
                                                 {activity.mainCategory} → {activity.subCategory}
                                             </div>
                                             <div className="activity-description">
-                                                {activity.item}
+                                                {activity.type === 'deletion' ? (
+                                                    <span style={{ color: '#ef4444', fontStyle: 'italic' }}>
+                                                        🗑️ Deleted: {activity.item} (by {activity.deletedBy})
+                                                    </span>
+                                                ) : (
+                                                    activity.item
+                                                )}
                                             </div>
                                             <div className="activity-amount">
                                                 -{formatCurrency(activity.amount)}
                                             </div>
+                                            {activity.type !== 'deletion' && (
+                                                <div className="activity-actions">
+                                                    <button 
+                                                        className="btn btn-delete"
+                                                        onClick={() => handleDeleteRecord(activity.id)}
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
@@ -1259,6 +1521,246 @@
                                             disabled={!expenseForm.mainCategoryId || !expenseForm.subCategoryId || (getItemsForSubCategory().length > 0 && !expenseForm.item)}
                                         >
                                             Record Expense
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {showSetupModal && (
+                        <div className="modal" onClick={() => setShowSetupModal(false)}>
+                            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '800px', maxHeight: '90vh' }}>
+                                <div className="modal-header">
+                                    <h3 className="modal-title">Setup New Fiscal Year</h3>
+                                </div>
+                                
+                                <div className="form-group">
+                                    <label className="form-label">New Fiscal Year</label>
+                                    <input
+                                        type="text"
+                                        className="form-input"
+                                        placeholder="e.g., 2025-26"
+                                        value={newFiscalYear}
+                                        onChange={(e) => setNewFiscalYear(e.target.value)}
+                                    />
+                                </div>
+
+                                <p style={{ color: '#6c757d', marginBottom: '1rem', fontSize: '0.9rem' }}>
+                                    Below is your current budget structure. You can edit amounts, delete items, or add new ones. 
+                                    Click "Create New Year" when ready.
+                                </p>
+
+                                <div style={{ maxHeight: '400px', overflowY: 'auto', border: '1px solid #e9ecef', borderRadius: '8px', padding: '1rem' }}>
+                                    {setupYearData.map((mainCat) => (
+                                        <div key={mainCat.id} style={{ marginBottom: '1.5rem', padding: '1rem', background: '#f8f9fa', borderRadius: '8px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                                                <strong style={{ color: '#1e40af' }}>{mainCat.code} - {mainCat.name}</strong>
+                                                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                                    <input
+                                                        type="number"
+                                                        value={mainCat.totalAmount}
+                                                        onChange={(e) => updateSetupBudgetAmount(mainCat.id, null, null, e.target.value)}
+                                                        className="setup-budget-input"
+                                                    />
+                                                    <button
+                                                        onClick={() => deleteSetupItem(mainCat.id, null, null)}
+                                                        className="setup-delete-btn"
+                                                    >
+                                                        🗑️
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            {mainCat.subCategories && mainCat.subCategories.map((subCat) => (
+                                                <div key={subCat.id} style={{ marginLeft: '1rem', marginBottom: '1rem', padding: '0.75rem', background: 'white', borderRadius: '6px' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                                        <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>{subCat.code} - {subCat.name}</span>
+                                                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                                            <input
+                                                                type="number"
+                                                                value={subCat.totalAmount}
+                                                                onChange={(e) => updateSetupBudgetAmount(mainCat.id, subCat.id, null, e.target.value)}
+                                                                style={{ width: '130px', padding: '0.4rem', border: '1px solid #e9ecef', borderRadius: '4px', fontSize: '0.9rem' }}
+                                                            />
+                                                            <button
+                                                                onClick={() => deleteSetupItem(mainCat.id, subCat.id, null)}
+                                                                style={{ padding: '0.4rem 0.6rem', background: '#fff', border: '1px solid #ef4444', color: '#ef4444', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
+                                                            >
+                                                                🗑️
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    {subCat.items && subCat.items.map((item) => (
+                                                        <div key={item.id} style={{ marginLeft: '1rem', marginTop: '0.5rem', padding: '0.5rem', background: '#f8f9fa', borderRadius: '4px', fontSize: '0.9rem' }}>
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                <span style={{ flex: 1 }}>{item.name}</span>
+                                                                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                                                    <input
+                                                                        type="number"
+                                                                        value={item.budget}
+                                                                        onChange={(e) => updateSetupBudgetAmount(mainCat.id, subCat.id, item.id, e.target.value)}
+                                                                        style={{ width: '110px', padding: '0.3rem', border: '1px solid #e9ecef', borderRadius: '4px', fontSize: '0.85rem' }}
+                                                                    />
+                                                                    <button
+                                                                        onClick={() => deleteSetupItem(mainCat.id, subCat.id, item.id)}
+                                                                        style={{ padding: '0.3rem 0.5rem', background: '#fff', border: '1px solid #ef4444', color: '#ef4444', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}
+                                                                    >
+                                                                        🗑️
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                            {item.notes && (
+                                                                <div style={{ marginTop: '0.25rem', fontSize: '0.8rem', color: '#6c757d', fontStyle: 'italic' }}>
+                                                                    Note: {item.notes}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="modal-actions" style={{ marginTop: '1.5rem' }}>
+                                    <button 
+                                        type="button" 
+                                        className="btn btn-secondary" 
+                                        onClick={() => setShowSetupModal(false)}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button 
+                                        type="button" 
+                                        className="btn btn-primary"
+                                        onClick={handleSetupYearSubmit}
+                                    >
+                                        Create New Year Budget
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {showAddItemModal && (
+                        <div className="modal" onClick={() => setShowAddItemModal(false)}>
+                            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                                <div className="modal-header">
+                                    <h3 className="modal-title">Add Budget Item</h3>
+                                </div>
+                                <form onSubmit={handleAddBudgetItem}>
+                                    <div className="form-group">
+                                        <label className="form-label">Item Level</label>
+                                        <select
+                                            className="form-select"
+                                            value={addItemForm.level}
+                                            onChange={(e) => setAddItemForm({...addItemForm, level: e.target.value, mainCategoryId: null, subCategoryId: null})}
+                                            required
+                                        >
+                                            <option value="1">Level 1 - Main Category (e.g., A16)</option>
+                                            <option value="2">Level 2 - Sub-Category (e.g., 3150)</option>
+                                            <option value="3">Level 3 - Individual Item</option>
+                                        </select>
+                                    </div>
+
+                                    {(addItemForm.level === '2' || addItemForm.level === '3') && (
+                                        <div className="form-group">
+                                            <label className="form-label">Parent Main Category</label>
+                                            <select
+                                                className="form-select"
+                                                value={addItemForm.mainCategoryId || ''}
+                                                onChange={(e) => setAddItemForm({...addItemForm, mainCategoryId: parseInt(e.target.value), subCategoryId: null})}
+                                                required
+                                            >
+                                                <option value="">Select main category</option>
+                                                {budgets.map(budget => (
+                                                    <option key={budget.id} value={budget.id}>
+                                                        {budget.code} - {budget.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
+
+                                    {addItemForm.level === '3' && addItemForm.mainCategoryId && (
+                                        <div className="form-group">
+                                            <label className="form-label">Parent Sub-Category</label>
+                                            <select
+                                                className="form-select"
+                                                value={addItemForm.subCategoryId || ''}
+                                                onChange={(e) => setAddItemForm({...addItemForm, subCategoryId: parseInt(e.target.value)})}
+                                                required
+                                            >
+                                                <option value="">Select sub-category</option>
+                                                {budgets.find(b => b.id === addItemForm.mainCategoryId)?.subCategories.map(subCat => (
+                                                    <option key={subCat.id} value={subCat.id}>
+                                                        {subCat.code} - {subCat.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
+
+                                    <div className="form-group">
+                                        <label className="form-label">Code {addItemForm.level === '3' ? '(optional)' : '(required)'}</label>
+                                        <input
+                                            type="text"
+                                            className="form-input"
+                                            placeholder={addItemForm.level === '1' ? 'e.g., A17' : addItemForm.level === '2' ? 'e.g., 3180' : 'Leave blank for Level 3'}
+                                            value={addItemForm.code}
+                                            onChange={(e) => setAddItemForm({...addItemForm, code: e.target.value})}
+                                            required={addItemForm.level !== '3'}
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label className="form-label">Name</label>
+                                        <input
+                                            type="text"
+                                            className="form-input"
+                                            placeholder="Enter item name"
+                                            value={addItemForm.name}
+                                            onChange={(e) => setAddItemForm({...addItemForm, name: e.target.value})}
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label className="form-label">Budget Amount (Pula)</label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            className="form-input"
+                                            placeholder="0.00"
+                                            value={addItemForm.budget}
+                                            onChange={(e) => setAddItemForm({...addItemForm, budget: e.target.value})}
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label className="form-label">Notes (optional)</label>
+                                        <input
+                                            type="text"
+                                            className="form-input"
+                                            placeholder="Add any relevant notes"
+                                            value={addItemForm.notes}
+                                            onChange={(e) => setAddItemForm({...addItemForm, notes: e.target.value})}
+                                        />
+                                    </div>
+
+                                    <div className="modal-actions">
+                                        <button 
+                                            type="button" 
+                                            className="btn btn-secondary" 
+                                            onClick={() => setShowAddItemModal(false)}
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button type="submit" className="btn btn-primary">
+                                            Add Budget Item
                                         </button>
                                     </div>
                                 </form>
