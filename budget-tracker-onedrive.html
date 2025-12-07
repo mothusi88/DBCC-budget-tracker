@@ -982,7 +982,7 @@
 
             const loadBudgetFromExcel = async () => {
                 setIsLoadingData(true);
-                const fileName = `DBCC-Budget-${currentPeriod}.xlsx`;
+                const fileName = `DBCC-Budget-${currentPeriod.replace('/', '-')}.xlsx`;
                 
                 try {
                     // Find the Excel file
@@ -1678,7 +1678,7 @@
             const handleSetupYearSubmit = async () => {
                 // Check if creating new year or editing current
                 const isNewYear = newFiscalYear !== currentPeriod;
-                const fileName = `DBCC-Budget-${newFiscalYear}.xlsx`;
+                const fileName = `DBCC-Budget-${newFiscalYear.replace('/', '-')}.xlsx`;
                 const sheetName = `${newFiscalYear} budget`;
 
                 if (isNewYear) {
