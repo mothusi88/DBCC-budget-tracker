@@ -732,6 +732,8 @@
             const [budgetPeriods] = useState(['24/25', '25/26', '26/27']);
             const [setupYearData, setSetupYearData] = useState([]);
             const [newFiscalYear, setNewFiscalYear] = useState('');
+            const [excelFileId, setExcelFileId] = useState(null);
+            const [isLoadingData, setIsLoadingData] = useState(false);
 
             const [expenseForm, setExpenseForm] = useState({
                 userName: '',
@@ -790,7 +792,7 @@
                 const accounts = msalInstance.getAllAccounts();
                 if (accounts.length > 0) {
                     setIsSignedIn(true);
-                    loadSampleData();
+                    loadBudgetFromExcel();
                 }
             };
 
@@ -800,7 +802,7 @@
                         scopes: ['Files.ReadWrite', 'User.Read']
                     });
                     setIsSignedIn(true);
-                    loadSampleData();
+                    loadBudgetFromExcel();
                 } catch (error) {
                     alert('Sign-in failed: ' + error.message);
                 }
@@ -808,6 +810,214 @@
 
             const signOut = () => {
                 msalInstance.logout();
+            };
+
+            // Microsoft Graph API Helper Functions
+            const getAccessToken = async () => {
+                try {
+                    const accounts = msalInstance.getAllAccounts();
+                    if (accounts.length === 0) return null;
+                    
+                    const response = await msalInstance.acquireTokenSilent({
+                        scopes: ['Files.ReadWrite'],
+                        account: accounts[0]
+                    });
+                    return response.accessToken;
+                } catch (error) {
+                    console.error('Token error:', error);
+                    return null;
+                }
+            };
+
+            const findExcelFile = async (fileName) => {
+                const token = await getAccessToken();
+                if (!token) return null;
+
+                try {
+                    const response = await fetch(
+                        `https://graph.microsoft.com/v1.0/me/drive/root:/${fileName}`,
+                        {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        }
+                    );
+                    
+                    if (response.ok) {
+                        const file = await response.json();
+                        return file.id;
+                    }
+                    return null;
+                } catch (error) {
+                    console.error('File search error:', error);
+                    return null;
+                }
+            };
+
+            const readExcelData = async (fileId, sheetName) => {
+                const token = await getAccessToken();
+                if (!token) return null;
+
+                try {
+                    const response = await fetch(
+                        `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/workbook/worksheets/${sheetName}/usedRange`,
+                        {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        }
+                    );
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        return data.values;
+                    }
+                    return null;
+                } catch (error) {
+                    console.error('Excel read error:', error);
+                    return null;
+                }
+            };
+
+            const writeExcelCell = async (fileId, sheetName, cell, value) => {
+                const token = await getAccessToken();
+                if (!token) return false;
+
+                try {
+                    const response = await fetch(
+                        `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/workbook/worksheets/${sheetName}/range(address='${cell}')`,
+                        {
+                            method: 'PATCH',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ values: [[value]] })
+                        }
+                    );
+                    return response.ok;
+                } catch (error) {
+                    console.error('Excel write error:', error);
+                    return false;
+                }
+            };
+
+            const parseExcelToHierarchy = (excelData) => {
+                if (!excelData || excelData.length < 2) return [];
+
+                const budgets = [];
+                let currentMain = null;
+                let currentSub = null;
+                let mainId = 0;
+                let subId = 0;
+                let itemId = 0;
+
+                // Skip header row
+                for (let i = 1; i < excelData.length; i++) {
+                    const row = excelData[i];
+                    const code = row[0];
+                    const description = row[1];
+                    const budget = parseFloat(row[2]) || 0;
+                    const actualSpend = parseFloat(row[4]) || 0;
+                    const notes = row[6] || '';
+
+                    if (!description) continue; // Skip empty rows
+
+                    // Check if it's a main category (starts with 'A')
+                    if (code && typeof code === 'string' && code.startsWith('A')) {
+                        currentMain = {
+                            id: ++mainId,
+                            code: code,
+                            name: description,
+                            totalAmount: budget,
+                            spentAmount: actualSpend,
+                            subCategories: [],
+                            excelRow: i + 1
+                        };
+                        budgets.push(currentMain);
+                        currentSub = null;
+                    }
+                    // Check if it's a sub-category (has numeric code)
+                    else if (code && !isNaN(code)) {
+                        if (currentMain) {
+                            currentSub = {
+                                id: ++subId,
+                                code: code.toString(),
+                                name: description,
+                                totalAmount: budget,
+                                spentAmount: actualSpend,
+                                items: [],
+                                excelRow: i + 1
+                            };
+                            currentMain.subCategories.push(currentSub);
+                        }
+                    }
+                    // It's an individual item (no code)
+                    else if (!code && currentSub) {
+                        currentSub.items.push({
+                            id: ++itemId,
+                            name: description,
+                            budget: budget,
+                            spent: actualSpend,
+                            notes: notes,
+                            excelRow: i + 1
+                        });
+                    }
+                    // Item directly under main category (no sub-category)
+                    else if (!code && currentMain && !currentSub) {
+                        // For categories like Training that have items but no sub-categories
+                        if (!currentMain.items) {
+                            currentMain.items = [];
+                        }
+                        currentMain.items.push({
+                            id: ++itemId,
+                            name: description,
+                            budget: budget,
+                            spent: actualSpend,
+                            notes: notes,
+                            excelRow: i + 1
+                        });
+                    }
+                }
+
+                return budgets;
+            };
+
+            const loadBudgetFromExcel = async () => {
+                setIsLoadingData(true);
+                const fileName = `DBCC-Budget-${currentPeriod}.xlsx`;
+                
+                try {
+                    // Find the Excel file
+                    const fileId = await findExcelFile(fileName);
+                    if (!fileId) {
+                        showNotification(`File not found: ${fileName}. Using sample data.`);
+                        loadSampleData();
+                        setIsLoadingData(false);
+                        return;
+                    }
+
+                    setExcelFileId(fileId);
+
+                    // Read Excel data
+                    const sheetName = `${currentPeriod} budget`;
+                    const excelData = await readExcelData(fileId, sheetName);
+                    
+                    if (!excelData) {
+                        showNotification('Could not read Excel data. Using sample data.');
+                        loadSampleData();
+                        setIsLoadingData(false);
+                        return;
+                    }
+
+                    // Parse into hierarchy
+                    const hierarchy = parseExcelToHierarchy(excelData);
+                    setBudgets(hierarchy);
+                    showNotification(`✅ Loaded budget from ${fileName}`);
+                    
+                } catch (error) {
+                    console.error('Load error:', error);
+                    showNotification('Error loading from Excel. Using sample data.');
+                    loadSampleData();
+                } finally {
+                    setIsLoadingData(false);
+                }
             };
 
             const loadSampleData = () => {
@@ -1052,23 +1262,73 @@
                 setTimeout(() => setNotification(null), 3000);
             };
 
-            const handleAddExpense = (e) => {
+            const handleAddExpense = async (e) => {
                 e.preventDefault();
                 
-                // In real implementation, this would write to OneDrive Excel
-                const newActivity = {
-                    id: activities.length + 1,
-                    timestamp: new Date().toISOString(),
-                    userName: expenseForm.userName,
-                    mainCategory: expenseForm.mainCategory,
-                    subCategory: expenseForm.subCategory,
-                    item: expenseForm.item,
-                    amount: parseFloat(expenseForm.amount),
-                    type: 'expense'
-                };
+                if (!excelFileId) {
+                    showNotification('⚠️ Excel file not connected. Please reload.');
+                    return;
+                }
 
-                setActivities([newActivity, ...activities]);
-                showNotification('Expense recorded successfully!');
+                // Find the Excel row for this item
+                const mainCat = budgets.find(b => b.id === expenseForm.mainCategoryId);
+                if (!mainCat) return;
+
+                let excelRow = null;
+                let itemName = expenseForm.item;
+
+                // Find the specific item
+                if (expenseForm.subCategoryId) {
+                    const subCat = mainCat.subCategories.find(s => s.id === expenseForm.subCategoryId);
+                    if (subCat && subCat.items) {
+                        const item = subCat.items.find(i => i.name === expenseForm.item);
+                        if (item) excelRow = item.excelRow;
+                    }
+                } else if (mainCat.items) {
+                    const item = mainCat.items.find(i => i.name === expenseForm.item);
+                    if (item) excelRow = item.excelRow;
+                }
+
+                if (!excelRow) {
+                    showNotification('⚠️ Could not find item in Excel.');
+                    return;
+                }
+
+                // Get current actual spend
+                const currentSpend = await getCurrentActualSpend(excelRow);
+                const newTotal = currentSpend + parseFloat(expenseForm.amount);
+
+                // Write to Excel
+                const sheetName = `${currentPeriod} budget`;
+                const success = await writeExcelCell(
+                    excelFileId, 
+                    sheetName, 
+                    `E${excelRow}`, 
+                    newTotal
+                );
+
+                if (success) {
+                    // Create activity log
+                    const newActivity = {
+                        id: activities.length + 1,
+                        timestamp: new Date().toISOString(),
+                        userName: expenseForm.userName,
+                        mainCategory: expenseForm.mainCategory,
+                        subCategory: expenseForm.subCategory,
+                        item: expenseForm.item,
+                        amount: parseFloat(expenseForm.amount),
+                        type: 'expense'
+                    };
+
+                    setActivities([newActivity, ...activities]);
+                    showNotification('✅ Expense saved to Excel!');
+                    
+                    // Reload data to reflect changes
+                    setTimeout(() => loadBudgetFromExcel(), 1000);
+                } else {
+                    showNotification('❌ Failed to save to Excel');
+                }
+
                 setShowExpenseModal(false);
                 setExpenseForm({
                     userName: '',
@@ -1080,6 +1340,30 @@
                     description: '',
                     amount: ''
                 });
+            };
+
+            const getCurrentActualSpend = async (row) => {
+                const token = await getAccessToken();
+                if (!token) return 0;
+
+                try {
+                    const sheetName = `${currentPeriod} budget`;
+                    const response = await fetch(
+                        `https://graph.microsoft.com/v1.0/me/drive/items/${excelFileId}/workbook/worksheets/${sheetName}/range(address='E${row}')`,
+                        {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        }
+                    );
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        return parseFloat(data.values[0][0]) || 0;
+                    }
+                    return 0;
+                } catch (error) {
+                    console.error('Read current spend error:', error);
+                    return 0;
+                }
             };
 
             const handleDeleteRecord = (activityId) => {
@@ -1131,10 +1415,65 @@
                 setShowSetupModal(true);
             };
 
-            const handleSetupYearSubmit = () => {
-                // In real implementation, this would create new Excel sheet with this data
-                showNotification(`Budget for FY ${newFiscalYear} would be created in Excel`);
-                setShowSetupModal(false);
+            const handleSetupYearSubmit = async () => {
+                // Check if creating new year or editing current
+                const isNewYear = newFiscalYear !== currentPeriod;
+                const fileName = `DBCC-Budget-${newFiscalYear}.xlsx`;
+                const sheetName = `${newFiscalYear} budget`;
+
+                if (isNewYear) {
+                    // Creating new year - would need to create new Excel file
+                    // This requires more complex Excel API calls (creating workbook)
+                    showNotification(`📝 Creating ${fileName} - Feature coming soon!`);
+                    setShowSetupModal(false);
+                } else {
+                    // Editing current year - update existing file
+                    if (!excelFileId) {
+                        showNotification('⚠️ Excel file not connected');
+                        return;
+                    }
+
+                    try {
+                        // Update budget amounts in Column C
+                        for (const mainCat of setupYearData) {
+                            if (mainCat.excelRow) {
+                                await writeExcelCell(excelFileId, sheetName, `C${mainCat.excelRow}`, mainCat.totalAmount);
+                            }
+                            
+                            if (mainCat.subCategories) {
+                                for (const subCat of mainCat.subCategories) {
+                                    if (subCat.excelRow) {
+                                        await writeExcelCell(excelFileId, sheetName, `C${subCat.excelRow}`, subCat.totalAmount);
+                                    }
+                                    
+                                    if (subCat.items) {
+                                        for (const item of subCat.items) {
+                                            if (item.excelRow) {
+                                                await writeExcelCell(excelFileId, sheetName, `C${item.excelRow}`, item.budget);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            if (mainCat.items) {
+                                for (const item of mainCat.items) {
+                                    if (item.excelRow) {
+                                        await writeExcelCell(excelFileId, sheetName, `C${item.excelRow}`, item.budget);
+                                    }
+                                }
+                            }
+                        }
+
+                        showNotification(`✅ Updated budget for FY ${newFiscalYear}!`);
+                        setTimeout(() => loadBudgetFromExcel(), 1000);
+                    } catch (error) {
+                        showNotification('❌ Error updating Excel');
+                        console.error(error);
+                    }
+                    
+                    setShowSetupModal(false);
+                }
             };
 
             const updateSetupBudgetAmount = (mainId, subId, itemId, newAmount) => {
@@ -1233,6 +1572,26 @@
                 );
             }
 
+            if (isLoadingData) {
+                return (
+                    <div className="container">
+                        <div className="header">
+                            <div className="header-left">
+                                <h1>DBCC Budget Tracker</h1>
+                                <p>Budget monitoring and expense tracking system</p>
+                            </div>
+                        </div>
+                        <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
+                            <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📊</div>
+                            <h2 style={{ marginBottom: '1rem' }}>Loading Budget Data...</h2>
+                            <p style={{ color: '#6c757d' }}>
+                                Fetching data from DBCC-Budget-{currentPeriod}.xlsx
+                            </p>
+                        </div>
+                    </div>
+                );
+            }
+
             const stats = calculateStats();
             const currentMonth = new Date().getMonth();
 
@@ -1250,7 +1609,10 @@
                                     <button
                                         key={period}
                                         className={`period-btn ${currentPeriod === period ? 'active' : ''}`}
-                                        onClick={() => setCurrentPeriod(period)}
+                                        onClick={() => {
+                                            setCurrentPeriod(period);
+                                            setTimeout(() => loadBudgetFromExcel(), 100);
+                                        }}
                                     >
                                         {period}
                                     </button>
