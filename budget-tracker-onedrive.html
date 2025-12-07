@@ -727,6 +727,7 @@
             const [showExpenseModal, setShowExpenseModal] = useState(false);
             const [showSetupModal, setShowSetupModal] = useState(false);
             const [showAddItemModal, setShowAddItemModal] = useState(false);
+            const [showReportsModal, setShowReportsModal] = useState(false);
             const [notification, setNotification] = useState(null);
             const [currentPeriod, setCurrentPeriod] = useState('25/26');
             const [budgetPeriods] = useState(['24/25', '25/26', '26/27']);
@@ -1366,6 +1367,202 @@
                 }
             };
 
+            const createNewExcelFile = async (fileName, sheetName, budgetData) => {
+                const token = await getAccessToken();
+                if (!token) return null;
+
+                try {
+                    // Create new workbook
+                    const createResponse = await fetch(
+                        `https://graph.microsoft.com/v1.0/me/drive/root:/${fileName}:/content`,
+                        {
+                            method: 'PUT',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                            },
+                            body: new Blob([], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+                        }
+                    );
+
+                    if (!createResponse.ok) return null;
+                    const fileData = await createResponse.json();
+                    const newFileId = fileData.id;
+
+                    // Add worksheet with proper name
+                    await fetch(
+                        `https://graph.microsoft.com/v1.0/me/drive/items/${newFileId}/workbook/worksheets`,
+                        {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ name: sheetName })
+                        }
+                    );
+
+                    // Write headers and data
+                    await writeExcelBulkData(newFileId, sheetName, budgetData);
+
+                    return newFileId;
+                } catch (error) {
+                    console.error('Create file error:', error);
+                    return null;
+                }
+            };
+
+            const writeExcelBulkData = async (fileId, sheetName, budgetData) => {
+                const token = await getAccessToken();
+                if (!token) return false;
+
+                try {
+                    // Prepare data array
+                    const rows = [
+                        ['Code', 'Description', `Budget ${budgetData.fiscalYear} FY`, 'Amount Approved on memo', 'Actual Spend', 'Variance', 'Notes']
+                    ];
+
+                    // Build rows from budget hierarchy
+                    for (const mainCat of budgetData.categories) {
+                        // Main category row
+                        rows.push([
+                            mainCat.code,
+                            mainCat.name,
+                            mainCat.totalAmount,
+                            '',
+                            '',
+                            '',
+                            ''
+                        ]);
+
+                        // Sub-categories and items
+                        if (mainCat.subCategories) {
+                            for (const subCat of mainCat.subCategories) {
+                                rows.push([
+                                    subCat.code,
+                                    subCat.name,
+                                    subCat.totalAmount,
+                                    '',
+                                    '',
+                                    `=C${rows.length + 1}-E${rows.length + 1}`,
+                                    ''
+                                ]);
+
+                                if (subCat.items) {
+                                    for (const item of subCat.items) {
+                                        rows.push([
+                                            '',
+                                            item.name,
+                                            item.budget,
+                                            '',
+                                            '',
+                                            `=C${rows.length + 1}-E${rows.length + 1}`,
+                                            item.notes || ''
+                                        ]);
+                                    }
+                                }
+                            }
+                        }
+
+                        // Items directly under main category
+                        if (mainCat.items) {
+                            for (const item of mainCat.items) {
+                                rows.push([
+                                    '',
+                                    item.name,
+                                    item.budget,
+                                    '',
+                                    '',
+                                    `=C${rows.length + 1}-E${rows.length + 1}`,
+                                    item.notes || ''
+                                ]);
+                            }
+                        }
+                    }
+
+                    // Write all data at once
+                    const rangeAddress = `A1:G${rows.length}`;
+                    const response = await fetch(
+                        `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/workbook/worksheets/${sheetName}/range(address='${rangeAddress}')`,
+                        {
+                            method: 'PATCH',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ values: rows })
+                        }
+                    );
+
+                    return response.ok;
+                } catch (error) {
+                    console.error('Bulk write error:', error);
+                    return false;
+                }
+            };
+
+            const insertExcelRow = async (fileId, sheetName, afterRow, rowData) => {
+                const token = await getAccessToken();
+                if (!token) return false;
+
+                try {
+                    // Insert row
+                    await fetch(
+                        `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/workbook/worksheets/${sheetName}/range(address='${afterRow}:${afterRow}')/insert`,
+                        {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ shift: 'Down' })
+                        }
+                    );
+
+                    // Write data to new row
+                    const response = await fetch(
+                        `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/workbook/worksheets/${sheetName}/range(address='A${afterRow}:G${afterRow}')`,
+                        {
+                            method: 'PATCH',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ values: [rowData] })
+                        }
+                    );
+
+                    return response.ok;
+                } catch (error) {
+                    console.error('Insert row error:', error);
+                    return false;
+                }
+            };
+
+            const deleteExcelRow = async (fileId, sheetName, rowNumber) => {
+                const token = await getAccessToken();
+                if (!token) return false;
+
+                try {
+                    const response = await fetch(
+                        `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/workbook/worksheets/${sheetName}/range(address='${rowNumber}:${rowNumber}')/delete`,
+                        {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ shift: 'Up' })
+                        }
+                    );
+
+                    return response.ok;
+                } catch (error) {
+                    console.error('Delete row error:', error);
+                    return false;
+                }
+            };
+
             const handleDeleteRecord = (activityId) => {
                 const activity = activities.find(a => a.id === activityId);
                 if (!activity) return;
@@ -1390,11 +1587,74 @@
                 }
             };
 
-            const handleAddBudgetItem = (e) => {
+            const handleAddBudgetItem = async (e) => {
                 e.preventDefault();
                 
-                // In real implementation, this would write to OneDrive Excel
-                showNotification('Budget item would be added to Excel here');
+                if (!excelFileId) {
+                    showNotification('⚠️ Excel file not connected');
+                    return;
+                }
+
+                const sheetName = `${currentPeriod} budget`;
+                let insertAfterRow = 2; // Default to after header
+                const level = parseInt(addItemForm.level);
+
+                // Determine where to insert based on level
+                if (level === 1) {
+                    // Main category - add at end
+                    insertAfterRow = budgets[budgets.length - 1]?.excelRow || 2;
+                } else if (level === 2) {
+                    // Sub-category - add after parent main category's last sub
+                    const mainCat = budgets.find(b => b.id === addItemForm.mainCategoryId);
+                    if (mainCat && mainCat.subCategories && mainCat.subCategories.length > 0) {
+                        const lastSub = mainCat.subCategories[mainCat.subCategories.length - 1];
+                        insertAfterRow = lastSub.excelRow;
+                    } else if (mainCat) {
+                        insertAfterRow = mainCat.excelRow;
+                    }
+                } else if (level === 3) {
+                    // Item - add after parent sub-category's last item
+                    const mainCat = budgets.find(b => b.id === addItemForm.mainCategoryId);
+                    if (mainCat) {
+                        const subCat = mainCat.subCategories?.find(s => s.id === addItemForm.subCategoryId);
+                        if (subCat && subCat.items && subCat.items.length > 0) {
+                            const lastItem = subCat.items[subCat.items.length - 1];
+                            insertAfterRow = lastItem.excelRow;
+                        } else if (subCat) {
+                            insertAfterRow = subCat.excelRow;
+                        }
+                    }
+                }
+
+                // Prepare row data
+                const rowData = [
+                    level === 3 ? '' : addItemForm.code, // Code (blank for items)
+                    addItemForm.name,
+                    parseFloat(addItemForm.budget) || 0,
+                    '',
+                    '',
+                    `=C${insertAfterRow + 1}-E${insertAfterRow + 1}`, // Variance formula
+                    addItemForm.notes || ''
+                ];
+
+                setIsLoadingData(true);
+                
+                try {
+                    const success = await insertExcelRow(excelFileId, sheetName, insertAfterRow + 1, rowData);
+                    
+                    if (success) {
+                        showNotification('✅ Budget item added to Excel!');
+                        setTimeout(() => loadBudgetFromExcel(), 1000);
+                    } else {
+                        showNotification('❌ Failed to add item to Excel');
+                    }
+                } catch (error) {
+                    showNotification('❌ Error adding item');
+                    console.error(error);
+                } finally {
+                    setIsLoadingData(false);
+                }
+
                 setShowAddItemModal(false);
                 setAddItemForm({
                     level: '1',
@@ -1422,9 +1682,31 @@
                 const sheetName = `${newFiscalYear} budget`;
 
                 if (isNewYear) {
-                    // Creating new year - would need to create new Excel file
-                    // This requires more complex Excel API calls (creating workbook)
-                    showNotification(`📝 Creating ${fileName} - Feature coming soon!`);
+                    // Creating new year - create new Excel file
+                    setIsLoadingData(true);
+                    
+                    try {
+                        const budgetData = {
+                            fiscalYear: newFiscalYear,
+                            categories: setupYearData
+                        };
+
+                        const newFileId = await createNewExcelFile(fileName, sheetName, budgetData);
+                        
+                        if (newFileId) {
+                            showNotification(`✅ Created ${fileName} successfully!`);
+                            setCurrentPeriod(newFiscalYear);
+                            setTimeout(() => loadBudgetFromExcel(), 2000);
+                        } else {
+                            showNotification('❌ Failed to create new Excel file');
+                        }
+                    } catch (error) {
+                        showNotification('❌ Error creating new year');
+                        console.error(error);
+                    } finally {
+                        setIsLoadingData(false);
+                    }
+                    
                     setShowSetupModal(false);
                 } else {
                     // Editing current year - update existing file
@@ -1433,6 +1715,8 @@
                         return;
                     }
 
+                    setIsLoadingData(true);
+                    
                     try {
                         // Update budget amounts in Column C
                         for (const mainCat of setupYearData) {
@@ -1470,6 +1754,8 @@
                     } catch (error) {
                         showNotification('❌ Error updating Excel');
                         console.error(error);
+                    } finally {
+                        setIsLoadingData(false);
                     }
                     
                     setShowSetupModal(false);
@@ -1512,27 +1798,164 @@
                 setSetupYearData(updated);
             };
 
-            const deleteSetupItem = (mainId, subId, itemId) => {
+            const deleteSetupItem = async (mainId, subId, itemId) => {
                 const updated = [...setupYearData];
                 const mainCat = updated.find(m => m.id === mainId);
                 if (!mainCat) return;
 
+                let excelRow = null;
+
                 if (subId === null) {
                     // Delete main category
+                    excelRow = mainCat.excelRow;
                     const filtered = updated.filter(m => m.id !== mainId);
                     setSetupYearData(filtered);
                 } else if (itemId === null) {
                     // Delete sub-category
+                    const subCat = mainCat.subCategories?.find(s => s.id === subId);
+                    if (subCat) excelRow = subCat.excelRow;
                     mainCat.subCategories = mainCat.subCategories.filter(s => s.id !== subId);
                     setSetupYearData(updated);
                 } else {
                     // Delete item
-                    const subCat = mainCat.subCategories.find(s => s.id === subId);
+                    const subCat = mainCat.subCategories?.find(s => s.id === subId);
                     if (subCat) {
+                        const item = subCat.items?.find(i => i.id === itemId);
+                        if (item) excelRow = item.excelRow;
                         subCat.items = subCat.items.filter(i => i.id !== itemId);
                         setSetupYearData(updated);
                     }
                 }
+
+                // Delete from Excel if we're editing current year
+                if (excelRow && excelFileId && newFiscalYear === currentPeriod) {
+                    const sheetName = `${currentPeriod} budget`;
+                    await deleteExcelRow(excelFileId, sheetName, excelRow);
+                    showNotification('✅ Deleted from Excel');
+                }
+            };
+
+            const generateQuarterlyReport = (quarter) => {
+                const stats = calculateStats();
+                const date = new Date().toLocaleDateString();
+                
+                let report = `
+═══════════════════════════════════════════════════════════════════════════════
+                    DBCC BUDGET TRACKER - ${quarter} REPORT
+                         Fiscal Year ${currentPeriod}
+                         Generated: ${date}
+═══════════════════════════════════════════════════════════════════════════════
+
+EXECUTIVE SUMMARY
+───────────────────────────────────────────────────────────────────────────────
+Total Budget:        ${formatCurrency(stats.totalBudget)}
+Total Spent:         ${formatCurrency(stats.totalSpent)}
+Remaining:           ${formatCurrency(stats.totalRemaining)}
+Utilization:         ${((stats.totalSpent / stats.totalBudget) * 100).toFixed(2)}%
+
+═══════════════════════════════════════════════════════════════════════════════
+DETAILED BREAKDOWN BY CATEGORY
+═══════════════════════════════════════════════════════════════════════════════
+
+`;
+
+                budgets.forEach(mainCat => {
+                    const variance = mainCat.totalAmount - mainCat.spentAmount;
+                    const percentage = (mainCat.spentAmount / mainCat.totalAmount) * 100;
+                    
+                    report += `
+${mainCat.code} - ${mainCat.name}
+───────────────────────────────────────────────────────────────────────────────
+Budget:              ${formatCurrency(mainCat.totalAmount)}
+Spent:               ${formatCurrency(mainCat.spentAmount)}
+Remaining:           ${formatCurrency(variance)}
+Utilization:         ${percentage.toFixed(2)}%
+
+`;
+
+                    if (mainCat.subCategories && mainCat.subCategories.length > 0) {
+                        report += `  Sub-Categories:\n`;
+                        mainCat.subCategories.forEach(subCat => {
+                            const subVariance = subCat.totalAmount - subCat.spentAmount;
+                            const subPercentage = (subCat.spentAmount / subCat.totalAmount) * 100;
+                            
+                            report += `
+    ${subCat.code} - ${subCat.name}
+    Budget: ${formatCurrency(subCat.totalAmount)} | Spent: ${formatCurrency(subCat.spentAmount)} | Remaining: ${formatCurrency(subVariance)} | ${subPercentage.toFixed(1)}%
+`;
+
+                            if (subCat.items && subCat.items.length > 0) {
+                                subCat.items.forEach(item => {
+                                    const itemVariance = item.budget - item.spent;
+                                    const itemPercentage = (item.spent / item.budget) * 100;
+                                    
+                                    report += `        • ${item.name}
+          Budget: ${formatCurrency(item.budget)} | Spent: ${formatCurrency(item.spent)} | Remaining: ${formatCurrency(itemVariance)} | ${itemPercentage.toFixed(1)}%
+`;
+                                    if (item.notes) {
+                                        report += `          Notes: ${item.notes}\n`;
+                                    }
+                                });
+                            }
+                        });
+                    }
+
+                    if (mainCat.items && mainCat.items.length > 0) {
+                        report += `  Items:\n`;
+                        mainCat.items.forEach(item => {
+                            const itemVariance = item.budget - item.spent;
+                            const itemPercentage = (item.spent / item.budget) * 100;
+                            
+                            report += `    • ${item.name}
+      Budget: ${formatCurrency(item.budget)} | Spent: ${formatCurrency(item.spent)} | Remaining: ${formatCurrency(itemVariance)} | ${itemPercentage.toFixed(1)}%
+`;
+                            if (item.notes) {
+                                report += `      Notes: ${item.notes}\n`;
+                            }
+                        });
+                    }
+
+                    report += `\n`;
+                });
+
+                report += `
+═══════════════════════════════════════════════════════════════════════════════
+RECENT ACTIVITY LOG
+═══════════════════════════════════════════════════════════════════════════════
+
+`;
+
+                activities.slice(0, 20).forEach(activity => {
+                    const actDate = new Date(activity.timestamp).toLocaleDateString();
+                    const actTime = new Date(activity.timestamp).toLocaleTimeString();
+                    
+                    if (activity.type === 'deletion') {
+                        report += `[${actDate} ${actTime}] DELETED by ${activity.deletedBy}\n`;
+                        report += `  ${activity.mainCategory} → ${activity.subCategory} → ${activity.item}\n`;
+                        report += `  Amount: ${formatCurrency(activity.amount)}\n\n`;
+                    } else {
+                        report += `[${actDate} ${actTime}] ${activity.userName}\n`;
+                        report += `  ${activity.mainCategory} → ${activity.subCategory} → ${activity.item}\n`;
+                        report += `  Amount: ${formatCurrency(activity.amount)}\n\n`;
+                    }
+                });
+
+                report += `
+═══════════════════════════════════════════════════════════════════════════════
+                              END OF REPORT
+═══════════════════════════════════════════════════════════════════════════════
+`;
+
+                // Download report
+                const blob = new Blob([report], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `DBCC_Budget_${currentPeriod}_${quarter}_Report.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                showNotification(`✅ ${quarter} Report downloaded!`);
             };
 
             const getSubCategoriesForMain = () => {
@@ -1624,7 +2047,7 @@
                             <button className="btn btn-secondary" onClick={openSetupNewYear}>
                                 ⚙️ Setup New Year
                             </button>
-                            <button className="btn btn-secondary">
+                            <button className="btn btn-secondary" onClick={() => setShowReportsModal(true)}>
                                 📊 Reports
                             </button>
                             <button className="btn btn-secondary" onClick={signOut}>
@@ -2225,6 +2648,88 @@
                                         </button>
                                     </div>
                                 </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {showReportsModal && (
+                        <div className="modal" onClick={() => setShowReportsModal(false)}>
+                            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+                                <div className="modal-header">
+                                    <h3 className="modal-title">Generate Reports</h3>
+                                </div>
+                                
+                                <p style={{ color: '#6c757d', marginBottom: '2rem', fontSize: '0.95rem' }}>
+                                    Select a quarter to generate a comprehensive budget report with detailed breakdowns and activity log.
+                                </p>
+
+                                <div style={{ display: 'grid', gap: '1rem' }}>
+                                    <button 
+                                        className="btn btn-primary"
+                                        onClick={() => {
+                                            generateQuarterlyReport('Q1');
+                                            setShowReportsModal(false);
+                                        }}
+                                        style={{ fontSize: '1rem', padding: '1rem' }}
+                                    >
+                                        📊 Q1 Report (Apr-Jun)
+                                    </button>
+                                    
+                                    <button 
+                                        className="btn btn-primary"
+                                        onClick={() => {
+                                            generateQuarterlyReport('Q2');
+                                            setShowReportsModal(false);
+                                        }}
+                                        style={{ fontSize: '1rem', padding: '1rem' }}
+                                    >
+                                        📊 Q2 Report (Jul-Sep)
+                                    </button>
+                                    
+                                    <button 
+                                        className="btn btn-primary"
+                                        onClick={() => {
+                                            generateQuarterlyReport('Q3');
+                                            setShowReportsModal(false);
+                                        }}
+                                        style={{ fontSize: '1rem', padding: '1rem' }}
+                                    >
+                                        📊 Q3 Report (Oct-Dec)
+                                    </button>
+                                    
+                                    <button 
+                                        className="btn btn-primary"
+                                        onClick={() => {
+                                            generateQuarterlyReport('Q4');
+                                            setShowReportsModal(false);
+                                        }}
+                                        style={{ fontSize: '1rem', padding: '1rem' }}
+                                    >
+                                        📊 Q4 Report (Jan-Mar)
+                                    </button>
+
+                                    <button 
+                                        className="btn btn-secondary"
+                                        onClick={() => {
+                                            generateQuarterlyReport('Annual');
+                                            setShowReportsModal(false);
+                                        }}
+                                        style={{ fontSize: '1rem', padding: '1rem' }}
+                                    >
+                                        📈 Annual Report
+                                    </button>
+                                </div>
+
+                                <div className="modal-actions" style={{ marginTop: '2rem' }}>
+                                    <button 
+                                        type="button" 
+                                        className="btn btn-secondary" 
+                                        onClick={() => setShowReportsModal(false)}
+                                        style={{ width: '100%' }}
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     )}
